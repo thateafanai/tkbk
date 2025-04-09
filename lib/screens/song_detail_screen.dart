@@ -1,7 +1,7 @@
 // lib/screens/song_detail_screen.dart
 import 'package:flutter/material.dart';
-import '../models/song.dart'; // Ensure this matches the import in home_screen.dart
-import '../state/favorites_state.dart'; // Import shared state
+import '../models/song.dart';
+import '../state/favorites_state.dart'; // Adjust path if needed
 
 class SongDetailScreen extends StatefulWidget {
   final Song song;
@@ -16,7 +16,8 @@ class SongDetailScreen extends StatefulWidget {
 }
 
 class _SongDetailScreenState extends State<SongDetailScreen> {
-  double _currentFontSize = 16.0;
+  // --- Re-added Font Size Slider State Variables ---
+  double _currentFontSize = 16.0; // Default font size
   final double _minFontSize = 10.0;
   final double _maxFontSize = 30.0;
 
@@ -24,7 +25,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
   Widget build(BuildContext context) {
     final isFavorite = FavoritesState.instance.isFavorite(widget.song);
 
-    // Define text styles based on the current font size state
+    // Define text styles based on the _currentFontSize state variable
     final baseStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
           height: 1.6,
           fontSize: _currentFontSize, // Use state variable
@@ -47,9 +48,9 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(isFavorite
-                      ? 'Removed from favorites.'
-                      : 'Added to favorites.'),
+                  content: Text(FavoritesState.instance.isFavorite(widget.song)
+                      ? 'Added to favorites.'
+                      : 'Removed from favorites.'),
                   duration: const Duration(seconds: 1),
                   behavior: SnackBarBehavior.floating,
                 ),
@@ -58,64 +59,72 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- Display Translation and Key (same as before) ---
-            if (widget.song.translation != null && widget.song.translation!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4.0),
-                child: Text('Translation: ${widget.song.translation}', style: infoStyle),
-              ),
-            if (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Text('Key: ${widget.song.musicKey}', style: infoStyle),
-              ),
-            if ((widget.song.translation != null && widget.song.translation!.isNotEmpty) || (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty))
-              const Divider(height: 20, thickness: 1),
-
-            // --- Display Processed Lyrics ---
-            // Iterate through the List<LyricPart> stored in the song object
-            for (LyricPart part in widget.song.lyrics)
-              Padding(
-                // Add padding below each part (stanza/chorus) for spacing
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Text(
-                  part.text, // Display the text of the part
-                  // Apply italic style if the part was marked as a chorus during loading
-                  style: part.isChorus ? italicStyle : baseStyle,
-                ),
-              ),
-
-            // --- Font Size Slider (same as before) ---
-            const SizedBox(height: 30),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
+      // Use a Column to arrange the scrollable area and the fixed slider
+      body: Column(
+        children: [
+          // Expanded makes the SingleChildScrollView take up available vertical space
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
+              // Removed SizedBox wrapper around Column
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Font Size:'),
-                  Expanded(
-                    child: Slider(
-                      value: _currentFontSize,
-                      min: _minFontSize,
-                      max: _maxFontSize,
-                      divisions: (_maxFontSize - _minFontSize).round(),
-                      label: _currentFontSize.round().toString(),
-                      onChanged: (double value) {
-                        setState(() {
-                          _currentFontSize = value;
-                        });
-                      },
+                  // --- Display Translation and Key ---
+                  if (widget.song.translation != null && widget.song.translation!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4.0),
+                      child: Text('Translation: ${widget.song.translation}', style: infoStyle),
                     ),
-                  ),
+                  if (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Text('Key: ${widget.song.musicKey}', style: infoStyle),
+                    ),
+                  if ((widget.song.translation != null && widget.song.translation!.isNotEmpty) || (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty))
+                     const Divider(height: 20, thickness: 1),
+
+                  // --- Display Processed Lyrics ---
+                  for (LyricPart part in widget.song.lyrics)
+                    Padding(
+                      // Increased bottom padding for double spacing
+                      padding: const EdgeInsets.only(bottom: 24.0),
+                      child: Text(
+                        part.text,
+                        style: part.isChorus ? italicStyle : baseStyle,
+                      ),
+                    ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          // --- Fixed Font Size Slider Area ---
+          // Placed outside Expanded, so it's fixed at the bottom of the Column
+          Padding(
+            // Add padding around the slider row, especially bottom for safe area
+            padding: const EdgeInsets.fromLTRB(18.0, 8.0, 18.0, 12.0),
+            child: Row(
+              children: [
+                const Text('Font Size:'),
+                Expanded(
+                  child: Slider(
+                    value: _currentFontSize,
+                    min: _minFontSize,
+                    max: _maxFontSize,
+                    divisions: (_maxFontSize - _minFontSize).round(),
+                    label: _currentFontSize.round().toString(),
+                    onChanged: (double value) {
+                      setState(() {
+                        _currentFontSize = value;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // --- End of Fixed Slider Area ---
+        ],
       ),
     );
   }
