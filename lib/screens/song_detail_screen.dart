@@ -1,6 +1,7 @@
 // lib/screens/song_detail_screen.dart
 import 'package:flutter/material.dart';
 import '../models/song.dart'; // Imports Song and LyricPart
+import '../state/favorites_state.dart'; // Import shared state
 
 class SongDetailScreen extends StatefulWidget {
   final Song song;
@@ -19,13 +20,12 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
   final double _minFontSize = 10.0;
   final double _maxFontSize = 30.0;
 
-  // --- NO LONGER NEED _buildLyricLines HELPER ---
-  // The logic is now simpler and can be directly in build method
-
   @override
   Widget build(BuildContext context) {
+    final isFavorite = FavoritesState.instance.isFavorite(widget.song);
+
     // Define text styles based on the current font size state
-     final baseStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+    final baseStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
           height: 1.6,
           fontSize: _currentFontSize, // Use state variable
         );
@@ -34,21 +34,23 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
           color: Theme.of(context).colorScheme.outline,
         );
 
-
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.song.number}. ${widget.song.title}'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.favorite_border), // Placeholder
-            tooltip: 'Mark as Favorite',
+            icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+            tooltip: isFavorite ? 'Remove from Favorites' : 'Mark as Favorite',
             onPressed: () {
-              // --- FAVORITE LOGIC WILL GO HERE IN STEP 8 ---
-              print('Favorite button tapped for song ${widget.song.number}');
+              setState(() {
+                FavoritesState.instance.toggleFavorite(widget.song);
+              });
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Favorite functionality not implemented yet.'),
-                  duration: Duration(seconds: 1),
+                SnackBar(
+                  content: Text(isFavorite
+                      ? 'Removed from favorites.'
+                      : 'Added to favorites.'),
+                  duration: const Duration(seconds: 1),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -72,23 +74,21 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: Text('Key: ${widget.song.musicKey}', style: infoStyle),
               ),
-             if ((widget.song.translation != null && widget.song.translation!.isNotEmpty) || (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty))
-                const Divider(height: 20, thickness: 1),
-
+            if ((widget.song.translation != null && widget.song.translation!.isNotEmpty) || (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty))
+              const Divider(height: 20, thickness: 1),
 
             // --- Display Processed Lyrics ---
             // Iterate through the List<LyricPart> stored in the song object
             for (LyricPart part in widget.song.lyrics)
               Padding(
-                 // Add padding below each part (stanza/chorus) for spacing
-                 padding: const EdgeInsets.only(bottom: 12.0),
-                 child: Text(
-                   part.text, // Display the text of the part
-                   // Apply italic style if the part was marked as a chorus during loading
-                   style: part.isChorus ? italicStyle : baseStyle,
-                 ),
-               ),
-
+                // Add padding below each part (stanza/chorus) for spacing
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Text(
+                  part.text, // Display the text of the part
+                  // Apply italic style if the part was marked as a chorus during loading
+                  style: part.isChorus ? italicStyle : baseStyle,
+                ),
+              ),
 
             // --- Font Size Slider (same as before) ---
             const SizedBox(height: 30),
@@ -105,7 +105,9 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                       divisions: (_maxFontSize - _minFontSize).round(),
                       label: _currentFontSize.round().toString(),
                       onChanged: (double value) {
-                        setState(() { _currentFontSize = value; });
+                        setState(() {
+                          _currentFontSize = value;
+                        });
                       },
                     ),
                   ),
