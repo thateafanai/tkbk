@@ -1,6 +1,6 @@
 // lib/screens/song_detail_screen.dart
 import 'package:flutter/material.dart';
-import '../models/song.dart'; // Imports Song and LyricPart
+import '../models/song.dart'; // Ensure this matches the import in home_screen.dart
 import '../state/favorites_state.dart'; // Import shared state
 
 class SongDetailScreen extends StatefulWidget {

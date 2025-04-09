@@ -1,51 +1,52 @@
 // lib/services/song_service.dart
 import 'dart:convert';
-import 'package:flutter/foundation.dart'; // Import for kDebugMode check
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import '../models/song.dart';
+import '../models/song.dart'; // Import the central Song model
 
-// Creates a single instance we can use anywhere
+// Global instance of the service
 final SongService songService = SongService();
 
 class SongService {
   List<Song> _songs = [];
-  List<Song> get songs => _songs;
+  List<Song> get songs => _songs; // Public getter for the loaded songs
 
   Future<void> loadSongs() async {
+    // Clear previous songs in case of reload
+    _songs = [];
     try {
       final String jsonString = await rootBundle.loadString('assets/songs.json');
       final List<dynamic> jsonList = jsonDecode(jsonString) as List<dynamic>;
 
-      _songs = jsonList
-          .map((jsonItem) {
-             try {
-               return Song.fromJson(jsonItem as Map<String, dynamic>);
-             } catch (e) {
-                // Handle potential errors during parsing of a single song item
-                if (kDebugMode) {
-                  print('Error parsing individual song: $jsonItem. Error: $e');
-                }
-                return null; // Return null if a song fails to parse
-             }
-          })
-          .where((song) => song != null) // Filter out any songs that failed to parse (returned null)
-          .cast<Song>() // Cast the result back to List<Song>
-          .toList();
+      List<Song?> potentiallyNullSongs = jsonList.map((jsonItem) {
+         try {
+           // Attempt to parse each item using the Song.fromJson factory
+           return Song.fromJson(jsonItem as Map<String, dynamic>);
+         } catch (e) {
+            // If parsing a single song fails, print error and return null
+            if (kDebugMode) {
+              print('Error parsing individual song: $jsonItem. Error: $e');
+            }
+            return null; // Indicates failure for this specific song item
+         }
+      }).toList();
 
-      // *** THIS IS THE CORRECTED LINE ***
-      // Sort songs by the 'number' field (previously was songNumber)
+       // Filter out any nulls (songs that failed to parse) and cast back to non-nullable
+      _songs = potentiallyNullSongs.where((song) => song != null).cast<Song>().toList();
+
+      // Sort the successfully loaded songs by number
       _songs.sort((a, b) => a.number.compareTo(b.number));
 
-      if (kDebugMode) { // Only print success message in debug mode
+      if (kDebugMode) {
         print('Successfully loaded and parsed ${_songs.length} songs.');
       }
 
     } catch (e) {
-      // Handle errors during file loading or initial JSON decoding
+      // Handle errors during file loading or initial JSON decoding of the whole list
       if (kDebugMode) {
-       print('Error loading or decoding songs file: $e');
+       print('Fatal Error loading or decoding songs file: $e');
       }
-      _songs = [];
+      _songs = []; // Ensure songs list is empty on fatal error
     }
   }
 }

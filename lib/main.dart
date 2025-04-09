@@ -1,68 +1,56 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart'; // Import home screen
-import 'screens/settings_screen.dart'; // Import settings screen
-import 'services/song_service.dart'; // Import the song service
-// Import AllSongsScreen
+import 'screens/home_screen.dart';
+import 'screens/settings_screen.dart';
+import 'services/song_service.dart';
+// Assuming route_observer.dart exists in lib/utils/
+// If not, you need to create it and define 'routeObserver' there.
+import 'package:tkbk/utils/route_observer.dart' as utils;
 
-// The main function that runs the app
-void main() async { // Add 'async' here
-  // Add this line: Ensures Flutter bindings are ready before async operations
+// Define the observer globally (or ensure it's defined in the imported file)
+// final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>(); // Example definition
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Add this line: Calls the loadSongs function and waits for it to complete
-  await songService.loadSongs();
-  // Now run the app
-  runApp(const MyApp());
+  await songService.loadSongs(); // Load songs via service
+  runApp(const MyApp()); // Can use const MyApp() now
 }
 
-// This widget is the root of your application.
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key); // Use const constructor
 
   @override
   Widget build(BuildContext context) {
-    // MaterialApp provides core app structure and theming
-    return MaterialApp(
-      title: 'APATANI BIISI KHETA', // Your app title
-      theme: ThemeData( // Configuration for the light theme
+    return MaterialApp( // Can use const if theme/darkTheme were const
+      title: 'APATANI BIISI KHETA',
+      theme: ThemeData(
         brightness: Brightness.light,
-        // Using a color scheme based on blue for light theme
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.light),
-        useMaterial3: true, // Use the newer Material Design 3 styles
-        // Optional: Customize App Bar theme for light mode
+        useMaterial3: true,
         appBarTheme: const AppBarTheme(
-           backgroundColor: Colors.blue, // Example color
-           foregroundColor: Colors.white, // Text/icon color on app bar
+           backgroundColor: Colors.blue,
+           foregroundColor: Colors.white,
          ),
-         // Optional: Customize Bottom Navigation Bar theme for light mode
          bottomNavigationBarTheme: const BottomNavigationBarThemeData(
            selectedItemColor: Colors.blue,
            unselectedItemColor: Colors.grey,
          ),
       ),
-      darkTheme: ThemeData( // Configuration for the dark theme
+      darkTheme: ThemeData(
          brightness: Brightness.dark,
-         // Using a color scheme based on blue for dark theme
          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark),
-         useMaterial3: true, // Use Material Design 3 for dark theme too
-         // Optional: Customize App Bar theme for dark mode
-         // appBarTheme: const AppBarTheme( ... ), // Can define separately if needed
-         // Optional: Customize Bottom Navigation Bar theme for dark mode
-         // bottomNavigationBarTheme: BottomNavigationBarThemeData( ... )
+         useMaterial3: true,
       ),
-      // Starts with the theme based on the user's device settings (light/dark)
-      // We can add a setting to override this later
       themeMode: ThemeMode.system,
-      // The first screen shown when the app starts
       home: const MainScreen(),
-      // Hide the "debug" banner in the top-right corner
       debugShowCheckedModeBanner: false,
+      // Pass the imported (or globally defined) routeObserver
+      navigatorObservers: [utils.routeObserver],
     );
   }
 }
 
-// This widget manages the state for the Bottom Navigation Bar
-// It determines whether to show the HomeScreen or SettingsScreen
+// MainScreen manages the Bottom Navigation Bar state
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -71,54 +59,48 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // This variable keeps track of which tab is currently selected
-  // 0 corresponds to the first tab (Home), 1 to the second (Settings)
   int _selectedIndex = 0;
 
-  // This list holds the actual screen widgets that the BottomNavigationBar will switch between.
+  // Screens controlled by the bottom bar
   static const List<Widget> _widgetOptions = <Widget>[
-    HomeScreen(),       // Revert back to HomeScreen
-    SettingsScreen(),   // Keep SettingsScreen as the second tab
+    HomeScreen(),       // Index 0
+    SettingsScreen(),   // Index 1
   ];
 
-  // This function is called when a bottom navigation bar item is tapped.
   void _onItemTapped(int index) {
-    // setState() tells Flutter that the state has changed and the UI needs to rebuild.
     setState(() {
-      _selectedIndex = index; // Update the selected index to the tapped item's index
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold provides the basic app layout structure (app bar, body, bottom bar, etc.)
     return Scaffold(
-      // The main content area of the screen.
-      // It displays the widget from _widgetOptions corresponding to the currently selected index.
-      body: Center( // Using Center just ensures the placeholder content is centered
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
-      // The bottom navigation bar itself.
+      // Body displays the selected screen from the list
+      body: IndexedStack( // Use IndexedStack to preserve state of screens
+         index: _selectedIndex,
+         children: _widgetOptions,
+       ),
+      // Bottom navigation bar setup
       bottomNavigationBar: BottomNavigationBar(
-        // The list of items (tabs) to display in the bar.
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home), // The icon for the tab
-            label: 'Home',         // The text label for the tab
+            icon: Icon(Icons.home),
+            label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings), // Icon for the second tab
-            label: 'Settings',        // Label for the second tab
+            icon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
-        currentIndex: _selectedIndex, // Tells the bar which item is currently active (highlighted)
-        // Optional: You can uncomment and change the color if you like
-        // selectedItemColor: Theme.of(context).colorScheme.primary,
-        // Function that gets called when a tab is tapped. We defined _onItemTapped above.
+        currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        // Defines the behavior of labels when selected/unselected. Can be useful on smaller screens.
-        // type: BottomNavigationBarType.fixed, // Ensures labels are always visible
+        // Recommended for few items: ensures labels are always visible
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }
 }
+
+// Ensure route_observer.dart exists in lib/utils/ and defines:
+// final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
