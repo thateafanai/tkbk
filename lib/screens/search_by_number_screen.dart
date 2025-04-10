@@ -34,31 +34,55 @@ class SearchByNumberScreen extends StatelessWidget {
                 return ElevatedButton(
                   style: ElevatedButton.styleFrom(),
                   onPressed: () {
-                    Song? targetSong;
-                    try {
-                      targetSong = songs.firstWhere(
-                        (song) => song.number == songNumber,
-                      );
-                    } catch (e) {
-                      targetSong = null;
-                      print('Song number $songNumber not found in the loaded list.');
-                    }
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext dialogContext) {
+                        return AlertDialog(
+                          title: const Text('Select Song Number'),
+                          content: Text('You selected song number: $songNumber'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('CANCEL'),
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop(); // Dismiss the dialog
+                              },
+                            ),
+                            TextButton(
+                              child: const Text('OK'),
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop(); // Dismiss the dialog
 
-                    if (targetSong != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SongDetailScreen(song: targetSong!),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Song data for number $songNumber not found.'),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
+                                Song? targetSong;
+                                try {
+                                  targetSong = songs.firstWhere(
+                                    (song) => song.number == songNumber,
+                                  );
+                                } catch (e) {
+                                  targetSong = null;
+                                  print('Song number $songNumber not found in the loaded list.');
+                                }
+
+                                if (targetSong != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SongDetailScreen(song: targetSong!),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Song data for number $songNumber not found.'),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   },
                   child: Text(
                     songNumber.toString(),

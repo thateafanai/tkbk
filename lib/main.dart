@@ -7,11 +7,21 @@ import 'package:tkbk/utils/route_observer.dart' as utils;
 import 'state/settings_state.dart'; // Import the settings state
 
 void main() async {
+  // REQUIRED: Ensures bindings are ready before async calls like SharedPreferences
   WidgetsFlutterBinding.ensureInitialized();
-  await songService.loadSongs();
-  // TODO: Load saved settings from SharedPreferences here
+
+  // Load songs AND settings before running the app
+  await Future.wait([
+      songService.loadSongs(),
+      settingsState.loadSettings(), // Call the load method here
+  ]);
+
+  // Now run the app
   runApp(MyApp());
 }
+
+// ... Keep the rest of your main.dart (MyApp, MainScreen, helpers) AS IS ...
+// (The code for MyApp using ValueListenableBuilders, etc., looks correct)
 
 // Helper function to safely apply font size factor
 TextStyle? _applyFontSizeFactor(TextStyle? style, double factor) {

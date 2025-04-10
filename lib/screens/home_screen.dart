@@ -9,7 +9,7 @@ import 'package:tkbk/widgets/custom_header.dart'; // Import the custom header
 
 // Import screen destinations
 import 'all_songs_screen.dart';
-import 'search_by_number_screen.dart';
+// import 'search_by_number_screen.dart'; // No longer needed
 import 'favorite_songs_screen.dart';
 import 'feedback_screen.dart';
 import 'index_screen.dart';
@@ -111,6 +111,96 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     });
   }
 
+  // --- Function to show the Number Grid Dialog (Updated) ---
+  void _showNumberGridDialog(BuildContext context) {
+    final List<Song> currentSongs = _songs; // Use songs from state
+    const int totalSongs = 237;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        // Use AlertDialog but make its content area scrollable
+        return AlertDialog(
+          title: const Text('Select Song Number'),
+          // Set scrollable to true
+          scrollable: true,
+          // Remove the SizedBox wrapper around the GridView
+          content: GridView.builder(
+              // Important: Prevent GridView from shrinking to minimum height
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(), // Let AlertDialog handle scrolling
+              padding: const EdgeInsets.only(top: 10, bottom: 10), // Padding for grid
+              itemCount: totalSongs,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4, // Keep 4 columns
+                mainAxisSpacing: 10.0,
+                crossAxisSpacing: 10.0,
+                // *** ADJUSTED ASPECT RATIO for taller buttons ***
+                childAspectRatio: 1.1, // Closer to 1.0 makes items more square
+              ),
+              itemBuilder: (BuildContext gridContext, int index) {
+                final int songNumber = index + 1;
+                return ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                     padding: EdgeInsets.zero, // Remove internal padding if needed
+                  ),
+                  onPressed: () {
+                    // Action when a number inside the dialog is tapped
+                    Song? targetSong;
+                    try {
+                      targetSong = currentSongs.firstWhere(
+                        (song) => song.number == songNumber,
+                      );
+                    } catch (e) {
+                      targetSong = null;
+                      print('Song number $songNumber not found.');
+                    }
+
+                    // 1. Dismiss the dialog
+                    Navigator.of(dialogContext).pop();
+
+                    // 2. Navigate if song found
+                    if (targetSong != null) {
+                      Navigator.push(
+                        context, // Use original context for navigation
+                        MaterialPageRoute(
+                          builder: (context) => SongDetailScreen(song: targetSong!),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Song data for number $songNumber not found.'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(
+                    songNumber.toString(),
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                );
+              },
+            ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('CANCEL'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Dismiss the dialog
+              },
+            ),
+          ],
+          // Use default padding or adjust if needed
+          contentPadding: const EdgeInsets.fromLTRB(15.0, 20.0, 15.0, 0.0), // Adjusted default padding
+          titlePadding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 10.0),
+        );
+      },
+    );
+  }
+  // --- End of Updated Number Grid Dialog Function ---
+
+  // Build method using your existing structure
   @override
   Widget build(BuildContext context) {
     bool showResultsOverlay = _searchController.text.isNotEmpty && _searchResults.isNotEmpty;
@@ -121,99 +211,75 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       body: Column(
         children: <Widget>[
           const CustomHeader(title: 'APATANI BIISI KHETA'), // Use the custom header
-          Padding(
+          Padding( // Search Bar Area
             padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-            child: Container(
-              decoration: BoxDecoration(
+            child: Container( // Search Bar Container Styling
+              decoration: BoxDecoration( /* ... your neumorphic decoration ... */
                 color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: BorderRadius.circular(30.0),
                 boxShadow: [
-                  BoxShadow(
-                    blurRadius: 5.0,
-                    offset: const Offset(-3, -3),
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                  BoxShadow(
-                    blurRadius: 5.0,
-                    offset: const Offset(3, 3),
-                    color: Colors.black.withOpacity(0.1),
-                  ),
+                  BoxShadow(blurRadius: 5.0, offset: const Offset(-3, -3), color: Colors.white.withOpacity(0.9)),
+                  BoxShadow(blurRadius: 5.0, offset: const Offset(3, 3), color: Colors.black.withOpacity(0.1)),
                 ],
               ),
-              child: Row(
+              child: Row( // Search Bar Row Content
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Icon(Icons.search, color: Colors.grey[600]),
-                  ),
+                  Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0), child: Icon(Icons.search, color: Colors.grey[600])),
                   Expanded(
                     child: TextField(
                       controller: _searchController,
                       focusNode: _searchFocusNode,
                       decoration: InputDecoration(
                         hintText: 'Search songs or lyrics...',
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(color: Colors.grey[600]),
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14.0),
-                      ),
+                        border: InputBorder.none, hintStyle: TextStyle(color: Colors.grey[600]),
+                        enabledBorder: InputBorder.none, focusedBorder: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14.0)),
                       onChanged: _searchSongs,
                     ),
                   ),
                   if (_searchController.text.isNotEmpty)
                     IconButton(
                       icon: const Icon(Icons.clear, color: Colors.grey),
-                      onPressed: () {
-                        _searchController.clear();
-                        _searchSongs('');
-                        _searchFocusNode.unfocus();
-                      },
-                    ),
+                      onPressed: () { _searchController.clear(); _searchSongs(''); _searchFocusNode.unfocus(); }),
                   if (_searchController.text.isEmpty) const SizedBox(width: 48),
                 ],
               ),
             ),
           ),
-          Expanded(
+          Expanded( // Main content area below search
             child: Stack(
               children: [
-                SingleChildScrollView(
+                SingleChildScrollView( // Your main buttons area
                   padding: const EdgeInsets.only(top: 16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
-                      _buildHomeButtonNeumorphic(
-                        context: context,
-                        label: 'ALL SONGS',
+                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
+                        context: context, label: 'ALL SONGS',
                         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AllSongsScreen())),
                       ),
-                      _buildHomeButtonNeumorphic(
-                        context: context,
-                        label: 'SEARCH BY NUMBER',
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchByNumberScreen())),
+                      // --- MODIFIED BUTTON ACTION ---
+                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
+                        context: context, label: 'SEARCH BY NUMBER',
+                        // Call the function to show the dialog
+                        onPressed: () => _showNumberGridDialog(context),
                       ),
-                      _buildHomeButtonNeumorphic(
-                        context: context,
-                        label: 'FAVORITE SONGS',
+                      // --- END OF MODIFIED ACTION ---
+                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
+                        context: context, label: 'FAVORITE SONGS',
                         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FavoriteSongsScreen())),
                       ),
-                      _buildHomeButtonNeumorphic(
-                        context: context,
-                        label: 'FEEDBACK',
+                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
+                        context: context, label: 'FEEDBACK',
                         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FeedbackScreen())),
                       ),
-                      _buildHomeButtonNeumorphic(
-                        context: context,
-                        label: 'INDEX',
+                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
+                        context: context, label: 'INDEX',
                         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const IndexScreen())),
                       ),
-                      Padding(
+                      Padding( // Psalm Text
                         padding: const EdgeInsets.only(top: 32.0, left: 32.0, right: 32.0),
-                        child: Center(
-                          child: RichText(
-                            textAlign: TextAlign.center,
-                            text: TextSpan(
+                        child: Center(child: RichText(textAlign: TextAlign.center, text: TextSpan(
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15),
                               children: const [
                                 TextSpan(text: 'Bless the LORD, O my soul; and all that is within me, bless his holy name. \n'),
@@ -226,58 +292,38 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     ],
                   ),
                 ),
-                if (showResultsOverlay)
+                if (showResultsOverlay) // Search Results Overlay
                   Positioned.fill(
                     child: GestureDetector(
                       onTap: () => _searchFocusNode.unfocus(),
                       child: Container(
                         color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
-                        child: ListView.builder(
+                        child: ListView.builder( /* ... your search results list ... */
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           itemCount: _searchResults.length,
                           itemBuilder: (context, index) {
                             final SearchResult result = _searchResults[index];
                             final sentenceCaseTitle = toSentenceCase(result.song.title);
-
-                            return Card(
+                            return Card( // Your search result card styling
                               margin: const EdgeInsets.symmetric(vertical: 4.0),
                               color: Theme.of(context).scaffoldBackgroundColor,
                               elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
                               child: Container(
-                                decoration: BoxDecoration(
+                                decoration: BoxDecoration( /* ... your neumorphic decoration ... */
                                   color: Theme.of(context).scaffoldBackgroundColor,
                                   borderRadius: BorderRadius.circular(10.0),
                                   boxShadow: [
-                                    BoxShadow(
-                                      blurRadius: 3.0,
-                                      offset: const Offset(-2, -2),
-                                      color: Colors.white.withOpacity(0.8),
-                                    ),
-                                    BoxShadow(
-                                      blurRadius: 3.0,
-                                      offset: const Offset(2, 2),
-                                      color: Colors.black.withOpacity(0.1),
-                                    ),
+                                    BoxShadow(blurRadius: 3.0, offset: const Offset(-2, -2), color: Colors.white.withOpacity(0.8)),
+                                    BoxShadow(blurRadius: 3.0, offset: const Offset(2, 2), color: Colors.black.withOpacity(0.1)),
                                   ],
                                 ),
                                 child: ListTile(
-                                  title: RichText(
-                                    text: _highlightSearchTerm(result.matchingLine, result.searchTerm),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  title: RichText(text: _highlightSearchTerm(result.matchingLine, result.searchTerm), maxLines: 2, overflow: TextOverflow.ellipsis),
                                   subtitle: Text("${result.song.number}. $sentenceCaseTitle"),
                                   onTap: () {
                                     _searchFocusNode.unfocus();
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => SongDetailScreen(song: result.song),
-                                      ),
-                                    );
+                                    Navigator.push(context, MaterialPageRoute(builder: (context) => SongDetailScreen(song: result.song)));
                                   },
                                 ),
                               ),
@@ -287,14 +333,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       ),
                     ),
                   ),
-                if (_searchController.text.isNotEmpty && _searchResults.isEmpty)
-                  Positioned.fill(
+                if (_searchController.text.isNotEmpty && _searchResults.isEmpty) // No results message
+                  Positioned.fill( /* ... No results found overlay ... */
                     child: GestureDetector(
                       onTap: () => _searchFocusNode.unfocus(),
                       child: Container(
                         color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
-                        child: const Center(child: Text("No results found.")),
-                      ),
+                        child: const Center(child: Text("No results found."))),
                     ),
                   ),
               ],
@@ -305,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
   }
 
-  // New Neumorphic Button Widget
+  // Your Neumorphic Button Widget
   Widget _buildHomeButtonNeumorphic({
     required BuildContext context,
     required String label,
@@ -316,42 +361,27 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 32.0),
       child: GestureDetector(
         onTap: onPressed,
-        child: Container(
+        child: Container( /* ... your neumorphic button decoration ... */
           padding: const EdgeInsets.symmetric(vertical: 16.0),
           decoration: BoxDecoration(
             color: baseColor,
             borderRadius: BorderRadius.circular(15.0),
             boxShadow: [
-              BoxShadow(
-                blurRadius: 5.0,
-                offset: const Offset(-3, -3),
-                color: Colors.white.withOpacity(0.9),
-              ),
-              BoxShadow(
-                blurRadius: 5.0,
-                offset: const Offset(3, 3),
-                color: Colors.black.withOpacity(0.1),
-              ),
+              BoxShadow(blurRadius: 5.0, offset: const Offset(-3, -3), color: Colors.white.withOpacity(0.9)),
+              BoxShadow(blurRadius: 5.0, offset: const Offset(3, 3), color: Colors.black.withOpacity(0.1)),
             ],
           ),
-          child: Center(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 18),
-            ),
-          ),
+          child: Center(child: Text(label, style: const TextStyle(fontSize: 18))),
         ),
       ),
     );
   }
 
-  // --- Helper Functions ---
+  // --- Helper Functions (remain unchanged) ---
   List<String> _findMatchingLines(String text, String query) {
     if (query.isEmpty) return [];
     final lines = text.split('\n');
-    return lines
-        .where((line) => line.toLowerCase().contains(query.toLowerCase()))
-        .toList();
+    return lines.where((line) => line.toLowerCase().contains(query.toLowerCase())).toList();
   }
 
   String toSentenceCase(String? text) {
@@ -360,42 +390,23 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   TextSpan _highlightSearchTerm(String text, String searchTerm) {
-    if (searchTerm.isEmpty || text.isEmpty) {
-      return TextSpan(text: text);
-    }
-
-    final TextStyle defaultStyle = TextStyle(color: Colors.grey[600]);
-    final TextStyle highlightStyle = const TextStyle(
-        fontWeight: FontWeight.bold, backgroundColor: Colors.yellow, color: Colors.black);
-
-    final lowerCaseText = text.toLowerCase();
-    final lowerCaseSearchTerm = searchTerm.toLowerCase();
-
-    final List<TextSpan> spans = [];
-    int start = 0;
-    int indexOfHighlight;
-
-    while (start < text.length) {
-      indexOfHighlight = lowerCaseText.indexOf(lowerCaseSearchTerm, start);
-
-      if (indexOfHighlight < 0) {
-        spans.add(TextSpan(text: text.substring(start), style: defaultStyle));
-        break;
-      }
-
-      if (indexOfHighlight > start) {
-        spans.add(TextSpan(text: text.substring(start, indexOfHighlight), style: defaultStyle));
-      }
-
-      final endIndex = indexOfHighlight + searchTerm.length;
-      spans.add(TextSpan(
-        text: text.substring(indexOfHighlight, endIndex),
-        style: highlightStyle,
-      ));
-
-      start = endIndex;
-    }
-
-    return TextSpan(children: spans);
+     if (searchTerm.isEmpty || text.isEmpty) { return TextSpan(text: text, style: TextStyle(color: Colors.grey[600])); } // Added base style
+     final TextStyle defaultStyle = TextStyle(color: Colors.grey[600]); // Use a default style
+     final TextStyle highlightStyle = const TextStyle( fontWeight: FontWeight.bold, backgroundColor: Colors.yellow, color: Colors.black );
+     final lowerCaseText = text.toLowerCase();
+     final lowerCaseSearchTerm = searchTerm.toLowerCase();
+     final List<TextSpan> spans = [];
+     int start = 0;
+     int indexOfHighlight;
+     while (start < text.length) {
+       indexOfHighlight = lowerCaseText.indexOf(lowerCaseSearchTerm, start);
+       if (indexOfHighlight < 0) { spans.add(TextSpan(text: text.substring(start), style: defaultStyle)); break; }
+       if (indexOfHighlight > start) { spans.add(TextSpan(text: text.substring(start, indexOfHighlight), style: defaultStyle)); }
+       final endIndex = indexOfHighlight + searchTerm.length;
+       spans.add(TextSpan(text: text.substring(indexOfHighlight, endIndex), style: highlightStyle));
+       start = endIndex;
+     }
+     return TextSpan(children: spans);
   }
 }
+// Remember to have lib/utils/route_observer.dart correctly defined
