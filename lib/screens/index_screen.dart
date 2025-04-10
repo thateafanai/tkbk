@@ -24,29 +24,35 @@ class IndexScreen extends StatelessWidget {
                 ? const Center(
                     child: Text('No songs loaded. Check assets/songs.json and restart the app.'),
                   )
-                : ListView.separated(
+                : ListView.builder( // Changed back to ListView.builder and handle spacing with Card
+                    padding: const EdgeInsets.all(8.0),
                     itemCount: sortedSongs.length,
-                    separatorBuilder: (BuildContext context, int index) => const Divider(),
                     itemBuilder: (BuildContext context, int index) {
                       final Song currentSong = sortedSongs[index];
-
-                      return ListTile(
-                        title: Text(currentSong.title),
-                        trailing: Text(
-                          currentSong.number.toString(),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.outline,
-                            fontSize: 14,
-                          ),
+                      return Card( // Wrap ListTile with a Card
+                        margin: const EdgeInsets.symmetric(vertical: 4.0), // Add vertical spacing
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
                         ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SongDetailScreen(song: currentSong),
+                        elevation: 2, // Optional: Subtle shadow
+                        child: ListTile(
+                          title: Text(currentSong.title),
+                          trailing: Text(
+                            currentSong.number.toString(),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.outline,
+                              fontSize: 14,
                             ),
-                          );
-                        },
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SongDetailScreen(song: currentSong),
+                              ),
+                            );
+                          },
+                        ),
                       );
                     },
                   ),

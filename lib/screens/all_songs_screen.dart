@@ -6,39 +6,35 @@ import '../services/song_service.dart';
 import 'song_detail_screen.dart';
 
 class AllSongsScreen extends StatelessWidget {
-  const AllSongsScreen({Key? key}) : super(key: key); // Added Key? key
+  const AllSongsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final List<Song> songs = songService.songs;
 
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(), // Dismiss keyboard
-      child: Scaffold(
-        body: Column(
-          children: [
-            const CustomHeader(title: 'All Songs'),
-            Expanded(
-              child: songs.isEmpty
-                  ? const Center(
-                      child: Text('No songs loaded. Check assets/songs.json and restart the app.'),
-                    )
-                  : ListView.separated(
-                      itemCount: songs.length,
-                      separatorBuilder: (BuildContext context, int index) => const Divider(),
-                      itemBuilder: (BuildContext context, int index) {
-                        final Song currentSong = songs[index];
-
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                            child: Text(currentSong.number.toString()),
-                          ),
+    return Scaffold(
+      body: Column(
+        children: [
+          const CustomHeader(title: 'All Songs'),
+          Expanded(
+            child: songs.isEmpty
+                ? const Center(
+                    child: Text('No songs loaded. Check assets/songs.json and restart the app.'),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(8.0), // Add some padding around the list
+                    itemCount: songs.length,
+                    itemBuilder: (context, index) {
+                      final Song currentSong = songs[index];
+                      return Card( // Wrap ListTile with a Card
+                        margin: const EdgeInsets.symmetric(vertical: 4.0), // Add vertical spacing between cards
+                        shape: RoundedRectangleBorder( // Optional: Add rounded corners
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        elevation: 2, // Optional: Add a subtle shadow
+                        child: ListTile(
                           title: Text(currentSong.title),
-                          subtitle: (currentSong.translation != null && currentSong.translation!.isNotEmpty)
-                              ? Text(currentSong.translation!)
-                              : null,
+                          subtitle: Text('Number: ${currentSong.number}'),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -47,12 +43,12 @@ class AllSongsScreen extends StatelessWidget {
                               ),
                             );
                           },
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
