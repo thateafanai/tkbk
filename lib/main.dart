@@ -51,58 +51,58 @@ class MyApp extends StatelessWidget {
     // Listen to theme mode changes
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: settingsState.themeMode,
-      builder: (_, mode, __) {
-        // *** Add for Debugging Theme (Optional) ***
-        // print("MyApp rebuilding with ThemeMode: $mode");
+      builder: (context, mode, child) {
         // Listen to font size changes
         return ValueListenableBuilder<double>(
           valueListenable: settingsState.fontSize,
-          builder: (_, fontSize, __) {
-            // *** Add for Debugging Font Size (Optional) ***
-            // print("MyApp rebuilding with FontSize: $fontSize");
-            // final factor = fontSize / 16.0;
-            // print("Calculated Factor: $factor");
+          builder: (context, fontSize, child) {
+            // Listen to font selection changes
+            return ValueListenableBuilder<String>(
+              valueListenable: settingsState.selectedFont,
+              builder: (context, selectedFont, child) {
+                String? fontFamily;
+                if (selectedFont != 'Default') {
+                  fontFamily = selectedFont;
+                }
 
-            // Function to create ThemeData with adjusted font size
-            ThemeData generateThemeData(Brightness brightness) {
-              final baseTheme = ThemeData(
-                brightness: brightness,
-                colorScheme: ColorScheme.fromSeed(
-                  seedColor: Colors.blue,
-                  brightness: brightness,
-                ),
-                useMaterial3: true,
-              );
+                // Function to create ThemeData with adjusted font size and family
+                ThemeData generateThemeData(Brightness brightness) {
+                  final baseTheme = ThemeData(
+                    brightness: brightness,
+                    colorScheme: ColorScheme.fromSeed(
+                      seedColor: Colors.blue,
+                      brightness: brightness,
+                    ),
+                    useMaterial3: true,
+                  );
 
-              // Create adjusted text theme safely
-              final adjustedTextTheme = createAdjustedTextTheme(
-                  baseTheme.textTheme, fontSize / 16.0); // Base size 16.0
+                  // Create adjusted text theme safely
+                  final adjustedTextTheme = createAdjustedTextTheme(
+                      baseTheme.textTheme, fontSize / 16.0); // Base size 16.0
 
-              // *** Add for Debugging Font Size (Optional) ***
-              // print("Base bodyMedium size: ${baseTheme.textTheme.bodyMedium?.fontSize}");
-              // print("Adjusted bodyMedium size: ${adjustedTextTheme.bodyMedium?.fontSize}");
+                  return baseTheme.copyWith(
+                    textTheme: adjustedTextTheme.apply(fontFamily: fontFamily), // Apply font family here
+                    appBarTheme: baseTheme.appBarTheme.copyWith(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                    bottomNavigationBarTheme: baseTheme.bottomNavigationBarTheme.copyWith(
+                      selectedItemColor: Colors.blue,
+                      unselectedItemColor: Colors.grey,
+                    ),
+                  );
+                }
 
-              return baseTheme.copyWith(
-                textTheme: adjustedTextTheme, // Use the safely adjusted theme
-                appBarTheme: baseTheme.appBarTheme.copyWith(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                 ),
-                 bottomNavigationBarTheme: baseTheme.bottomNavigationBarTheme.copyWith(
-                    selectedItemColor: Colors.blue,
-                    unselectedItemColor: Colors.grey,
-                  ),
-              );
-            }
-
-            return MaterialApp(
-              navigatorObservers: [utils.routeObserver],
-              title: 'APATANI BIISI KHETA',
-              theme: generateThemeData(Brightness.light), // Generate light theme
-              darkTheme: generateThemeData(Brightness.dark), // Generate dark theme
-              themeMode: mode, // Use the theme mode from the notifier
-              home: const MainScreen(),
-              debugShowCheckedModeBanner: false,
+                return MaterialApp(
+                  navigatorObservers: [utils.routeObserver],
+                  title: 'APATANI BIISI KHETA',
+                  theme: generateThemeData(Brightness.light), // Generate light theme
+                  darkTheme: generateThemeData(Brightness.dark), // Generate dark theme
+                  themeMode: mode, // Use the theme mode from the notifier
+                  home: const MainScreen(),
+                  debugShowCheckedModeBanner: false,
+                );
+              },
             );
           },
         );
@@ -131,9 +131,9 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack( // Use IndexedStack to preserve state
-         index: _selectedIndex,
-         children: _widgetOptions,
-       ),
+          index: _selectedIndex,
+          children: _widgetOptions,
+        ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem( icon: Icon(Icons.home), label: 'Home', ),

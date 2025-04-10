@@ -63,6 +63,17 @@ flutter:
     - assets/songs.json
     - assets/logo.png
 
+  fonts:
+  - family: Roboto
+    fonts:
+      - asset: assets/fonts/Roboto-Regular.ttf
+  - family: Lato
+    fonts:
+      - asset: assets/fonts/Lato-Regular.ttf
+  - family: Open Sans
+    fonts:
+      - asset: assets/fonts/OpenSans-Regular.ttf
+  # You don't need to declare 'Default' as it's a system font.
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

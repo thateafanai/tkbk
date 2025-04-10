@@ -13,19 +13,13 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isAlwaysOn = false;
   final List<String> _fontOptions = ['Default', 'Roboto', 'Lato', 'Open Sans'];
-  String _selectedFont = 'Default';
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedFont = 'Default';
-  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final currentThemeMode = settingsState.themeMode.value;
     final currentFontSize = settingsState.fontSize.value;
+    final currentSelectedFont = settingsState.selectedFont.value; // Get the current selected font from state
 
     return Scaffold(
       body: Column(
@@ -71,23 +65,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     leading: const Icon(Icons.font_download_outlined),
                     title: const Text('Font'),
                     trailing: DropdownButton<String>(
-                      value: _selectedFont,
+                      value: currentSelectedFont, // Use the value from settingsState
                       underline: Container(),
                       icon: const Icon(Icons.arrow_drop_down),
                       items: _fontOptions.map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
+                        return DropdownMenuItem(
                           value: value,
                           child: Text(value),
                         );
                       }).toList(),
                       onChanged: (String? newValue) {
                         if (newValue != null) {
-                          setState(() {
-                            _selectedFont = newValue;
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               const SnackBar(content: Text('Global font application pending.'), duration: Duration(seconds: 1))
-                            );
-                          });
+                          settingsState.setSelectedFont(newValue); // Update the selected font in settingsState
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             const SnackBar(content: Text('Global font application pending.'), duration: Duration(seconds: 1))
+                          );
                         }
                       },
                     ),
@@ -198,7 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             dense: true,
                             contentPadding: EdgeInsets.zero,
                             title: Text('Published by', style: textTheme.titleSmall),
-                            subtitle: const Text('Apatani Baptist Association, Ziro, Lower Subansiri District, Arunachal Pradesh.'),
+                            subtitle: const Text('Apatani Baptist Association, Ziro \nLower Subansiri District, Arunachal Pradesh.'),
                           ),
                       ],
                     ),

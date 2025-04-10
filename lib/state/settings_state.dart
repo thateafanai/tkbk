@@ -11,6 +11,7 @@ class SettingsState {
   // ValueNotifiers to hold and notify about changes
   final ValueNotifier<ThemeMode> themeMode = ValueNotifier(ThemeMode.system);
   final ValueNotifier<double> fontSize = ValueNotifier(16.0); // Default font size
+  final ValueNotifier<String> selectedFont = ValueNotifier('Default'); // Add for font selection
 
   // --- Methods to update settings ---
 
@@ -28,14 +29,13 @@ class SettingsState {
     }
   }
 
-  // --- Placeholder for future font selection ---
-  // final ValueNotifier<String> fontFamily = ValueNotifier('Default');
-  // void setFontFamily(String newFont) {
-  //   if (fontFamily.value != newFont) {
-  //     fontFamily.value = newFont;
-  //     // TODO: Persist this setting & apply font
-  //   }
-  // }
+  // --- Method to update font selection ---
+  void setSelectedFont(String newFont) {
+    if (selectedFont.value != newFont) {
+      selectedFont.value = newFont;
+      // TODO: Persist this setting & apply font
+    }
+  }
 }
 
 // Global instance for easy access

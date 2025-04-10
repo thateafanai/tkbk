@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models/song.dart';
 import '../state/favorites_state.dart'; // Adjust path if needed
+import '../widgets/custom_header.dart'; // Import the CustomHeader
 
 class SongDetailScreen extends StatefulWidget {
   final Song song;
@@ -36,94 +37,94 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
         );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.song.number}. ${widget.song.title}'),
-        actions: [
-          IconButton(
-            icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-            tooltip: isFavorite ? 'Remove from Favorites' : 'Mark as Favorite',
-            onPressed: () {
-              setState(() {
-                FavoritesState.instance.toggleFavorite(widget.song);
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(FavoritesState.instance.isFavorite(widget.song)
-                      ? 'Added to favorites.'
-                      : 'Removed from favorites.'),
-                  duration: const Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      // Use a Column to arrange the scrollable area and the fixed slider
-      body: Column(
+      body: Stack(
         children: [
-          // Expanded makes the SingleChildScrollView take up available vertical space
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
-              // Removed SizedBox wrapper around Column
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // --- Display Translation and Key ---
-                  if (widget.song.translation != null && widget.song.translation!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Text('Translation: ${widget.song.translation}', style: infoStyle),
-                    ),
-                  if (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Text('Key: ${widget.song.musicKey}', style: infoStyle),
-                    ),
-                  if ((widget.song.translation != null && widget.song.translation!.isNotEmpty) || (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty))
-                     const Divider(height: 20, thickness: 1),
+          Column(
+            children: [
+              CustomHeader(title: '${widget.song.number}. ${widget.song.title}'), // Add CustomHeader here
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // --- Display Translation and Key ---
+                      if (widget.song.translation != null && widget.song.translation!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4.0),
+                          child: Text('Translation: ${widget.song.translation}', style: infoStyle),
+                        ),
+                      if (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: Text('Key: ${widget.song.musicKey}', style: infoStyle),
+                        ),
+                      if ((widget.song.translation != null && widget.song.translation!.isNotEmpty) || (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty))
+                        const Divider(height: 20, thickness: 1),
 
-                  // --- Display Processed Lyrics ---
-                  for (LyricPart part in widget.song.lyrics)
-                    Padding(
-                      // Increased bottom padding for double spacing
-                      padding: const EdgeInsets.only(bottom: 24.0),
-                      child: Text(
-                        part.text,
-                        style: part.isChorus ? italicStyle : baseStyle,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          // --- Fixed Font Size Slider Area ---
-          // Placed outside Expanded, so it's fixed at the bottom of the Column
-          Padding(
-            // Add padding around the slider row, especially bottom for safe area
-            padding: const EdgeInsets.fromLTRB(18.0, 8.0, 18.0, 12.0),
-            child: Row(
-              children: [
-                const Text('Font Size:'),
-                Expanded(
-                  child: Slider(
-                    value: _currentFontSize,
-                    min: _minFontSize,
-                    max: _maxFontSize,
-                    divisions: (_maxFontSize - _minFontSize).round(),
-                    label: _currentFontSize.round().toString(),
-                    onChanged: (double value) {
-                      setState(() {
-                        _currentFontSize = value;
-                      });
-                    },
+                      // --- Display Processed Lyrics ---
+                      for (LyricPart part in widget.song.lyrics)
+                        Padding(
+                          // Increased bottom padding for double spacing
+                          padding: const EdgeInsets.only(bottom: 24.0),
+                          child: Text(
+                            part.text,
+                            style: part.isChorus ? italicStyle : baseStyle,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              ],
+              ),
+              // --- Fixed Font Size Slider Area ---
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18.0, 8.0, 18.0, 12.0),
+                child: Row(
+                  children: [
+                    const Text('Font Size:'),
+                    Expanded(
+                      child: Slider(
+                        value: _currentFontSize,
+                        min: _minFontSize,
+                        max: _maxFontSize,
+                        divisions: (_maxFontSize - _minFontSize).round(),
+                        label: _currentFontSize.round().toString(),
+                        onChanged: (double value) {
+                          setState(() {
+                            _currentFontSize = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // --- End of Fixed Slider Area ---
+            ],
+          ),
+          // --- Favorite Button positioned using Stack ---
+          Positioned(
+            bottom: 60.0, // Adjust this value to position it above the slider
+            right: 16.0, // Adjust this value for right positioning
+            child: FloatingActionButton(
+              mini: true, // Make it a smaller button if desired
+              onPressed: () {
+                setState(() {
+                  FavoritesState.instance.toggleFavorite(widget.song);
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(FavoritesState.instance.isFavorite(widget.song)
+                        ? 'Added to favorites.'
+                        : 'Removed from favorites.'),
+                    duration: const Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
             ),
           ),
-          // --- End of Fixed Slider Area ---
         ],
       ),
     );
