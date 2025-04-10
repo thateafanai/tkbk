@@ -350,28 +350,78 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
   }
 
-  // Your Neumorphic Button Widget
+  // Neumorphic Button Widget - Inset Style Attempt
   Widget _buildHomeButtonNeumorphic({
     required BuildContext context,
     required String label,
     required VoidCallback onPressed,
   }) {
     final Color baseColor = Theme.of(context).scaffoldBackgroundColor;
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Define sharp shadow colors
+    // Dark shadow (for top-left) - needs to be noticeable
+    final Color darkShadow = isDarkMode ? Colors.black.withOpacity(0.7) : Colors.grey.shade500.withOpacity(0.8);
+    // Light shadow (for bottom-right) - often pure white works well in light mode
+    final Color lightShadow = isDarkMode ? Colors.white.withOpacity(0.10) : Colors.white.withOpacity(0.9);
+
+    // Define subtle gradient colors based on baseColor
+    final Color slightlyDarker = Color.lerp(baseColor, Colors.black, 0.03)!; // Darken slightly
+    final Color slightlyLighter = Color.lerp(baseColor, Colors.white, 0.05)!; // Lighten slightly
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 32.0),
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container( /* ... your neumorphic button decoration ... */
-          padding: const EdgeInsets.symmetric(vertical: 16.0),
-          decoration: BoxDecoration(
-            color: baseColor,
-            borderRadius: BorderRadius.circular(15.0),
-            boxShadow: [
-              BoxShadow(blurRadius: 5.0, offset: const Offset(-3, -3), color: Colors.white.withOpacity(0.9)),
-              BoxShadow(blurRadius: 5.0, offset: const Offset(3, 3), color: Colors.black.withOpacity(0.1)),
-            ],
+      padding: const EdgeInsets.symmetric(vertical: 9.0, horizontal: 32.0),
+      child: Material(
+        color: Colors.transparent, // Make Material transparent, Container holds visuals
+        borderRadius: BorderRadius.circular(15.0),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(15.0),
+          onTap: onPressed,
+          splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            decoration: BoxDecoration(
+              color: baseColor, // Base color on the container
+              borderRadius: BorderRadius.circular(15.0),
+              // Subtle gradient to enhance inset look
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                   slightlyDarker, // Darker shade top-left
+                   baseColor, // Base in middle
+                   slightlyLighter, // Lighter shade bottom-right
+                ],
+                stops: const [0.0, 0.5, 1.0], // Adjust stops for gradient spread
+              ),
+              boxShadow: [
+                // Dark shadow top-left (Inset)
+                BoxShadow(
+                  blurRadius: 3.0,    // Sharp blur
+                  spreadRadius: 1.0,   // Small spread
+                  offset: const Offset(-3, -3), // Negative offset
+                  color: darkShadow,
+                ),
+                // Light shadow bottom-right (Inset)
+                BoxShadow(
+                  blurRadius: 3.0,    // Sharp blur
+                  spreadRadius: 1.0,   // Small spread
+                  offset: const Offset(3, 3),  // Positive offset
+                  color: lightShadow,
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold, // Keep label bold
+                ),
+              ),
+            ),
           ),
-          child: Center(child: Text(label, style: const TextStyle(fontSize: 18))),
         ),
       ),
     );
