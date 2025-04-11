@@ -1,140 +1,109 @@
 // lib/screens/favorite_songs_screen.dart
 import 'package:flutter/material.dart';
-import 'package:tkbk/widgets/custom_header.dart';
 import '../models/song.dart';
+import '../services/song_service.dart';
 import '../state/favorites_state.dart';
-import 'song_detail_screen.dart';
+import '../state/settings_state.dart';
+import '../widgets/custom_header.dart';
+import '../screens/song_detail_screen.dart';
+import '../widgets/song_list_item.dart';
+
+// --- Local Helper function specific to this screen ---
+Widget _buildSongListItem(BuildContext context, Song song, double fontSizeFactor) {
+  // (Paste the exact same function definition from AllSongsScreen here)
+  final textTheme = Theme.of(context).textTheme;
+  final titleStyle = textTheme.titleMedium?.copyWith(fontSize: (textTheme.titleMedium?.fontSize ?? 16.0) * fontSizeFactor);
+  final subtitleStyle = textTheme.bodyMedium?.copyWith(fontSize: (textTheme.bodyMedium?.fontSize ?? 14.0) * fontSizeFactor);
+  final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  final Color shadowColor = isDarkMode ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1);
+  final Color highlightColor = isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.7);
+
+  return Card(
+    margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+    color: Theme.of(context).cardColor, elevation: 0,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+    child: Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(8.0),
+        boxShadow: [
+          BoxShadow(blurRadius: 4.0, spreadRadius: 1.0, offset: const Offset(-2, -2), color: highlightColor),
+          BoxShadow(blurRadius: 4.0, spreadRadius: 1.0, offset: const Offset(2, 2), color: shadowColor),
+        ],
+      ),
+      child: InkWell(
+         borderRadius: BorderRadius.circular(8.0),
+         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SongDetailScreen(song: song))),
+         child: Padding(
+           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+           child: Row(
+             children: [
+                Text("${song.number}.", style: subtitleStyle?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                 const SizedBox(width: 12),
+                 Expanded(
+                   child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                         Text(song.title, style: titleStyle, maxLines: 1, overflow: TextOverflow.ellipsis),
+                         if (song.translation != null && song.translation!.isNotEmpty)
+                           Padding(padding: const EdgeInsets.only(top: 2.0), child: Text(song.translation!, style: subtitleStyle, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                       ],
+                    ),
+                 ),
+             ],
+           ),
+         ),
+      ),
+    ),
+  );
+}
+// --- END Local Helper ---
+
 
 class FavoriteSongsScreen extends StatelessWidget {
-  const FavoriteSongsScreen({Key? key}) : super(key: key);
+  const FavoriteSongsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final favoriteSongs = FavoritesState.instance.favorites;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = Theme.of(context).scaffoldBackgroundColor; // Use the scaffold background color
 
-    // Define shadow and highlight colors based on the theme
-    final Color shadowColor = isDarkMode ? Colors.black54 : Colors.grey.shade400;
-    final Color highlightColor = isDarkMode ? Colors.grey.shade800 : Colors.white;
-    final Color secondShadowColor = isDarkMode ? Colors.black45 : Colors.grey.shade300; // A slightly lighter shadow
+    return ValueListenableBuilder<List<int>>(
+      valueListenable: favoritesState.favoriteSongNumbersNotifier,
+      builder: (context, favoriteNumbers, child) {
 
-    return Scaffold(
-      body: Column(
-        children: [
-          const CustomHeader(title: 'Favorite Songs'),
-          Expanded(
-            child: favoriteSongs.isEmpty
-                ? const Center(
-                    child: Text('No favorite songs yet.'),
-                  )
-                : ListView.builder( // Changed to ListView.builder
-                    padding: const EdgeInsets.all(8.0), // Add padding around the list
-                    itemCount: favoriteSongs.length,
-                    itemBuilder: (context, index) {
-                      final song = favoriteSongs[index];
-                      return Card( // Wrap ListTile with a Card
-                        margin: const EdgeInsets.symmetric(vertical: 4.0), // Add vertical spacing
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        elevation: 2, // Optional: Subtle shadow
-                        child: ListTile(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SongDetailScreen(song: song),
-                              ),
-                            );
-                          },
-                          title: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${song.number}. ',
-                                style: Theme.of(context).textTheme.bodyLarge,
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      song.title,
-                                      style: Theme.of(context).textTheme.bodyLarge,
-                                    ),
-                                    if (song.translation != null && song.translation!.isNotEmpty)
-                                      Text(
-                                        song.translation!,
-                                        style: Theme.of(context).textTheme.bodyMedium,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
+        final List<Song> favoriteSongs = songService.songs
+            .where((song) => favoriteNumbers.contains(song.number))
+            .toList();
+        favoriteSongs.sort((a, b) => a.number.compareTo(b.number));
+
+         return ValueListenableBuilder<double>(
+            valueListenable: settingsState.fontSize,
+            builder: (context, _, child) {
+               final double fontSizeFactor = settingsState.fontSizeFactor;
+
+               return Scaffold(
+                  appBar: const CustomHeader(title: 'Favorite Songs', showBackButton: true),
+                  body: favoriteSongs.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No favorite songs marked yet.',
+                            style: TextStyle(fontSize: 16 * fontSizeFactor, color: Colors.grey[600]),
                           ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                          itemCount: favoriteSongs.length,
+                          itemBuilder: (BuildContext context, int index) {
+                        // Instantiate the SongListItem widget class
+                        return SongListItem(
+                          key: ValueKey(favoriteSongs[index].number), // Add key
+                          song: favoriteSongs[index],
+                          fontSizeFactor: fontSizeFactor,
+                        );
+                      },
                         ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: Container( // Wrap BottomNavigationBar with Container
-        decoration: BoxDecoration(
-          color: baseColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(15)), // Optional rounded corners
-          boxShadow: [
-            // Subtle top highlight
-            BoxShadow(
-              color: highlightColor,
-              offset: const Offset(-1, -1),
-              blurRadius: 3,
-              spreadRadius: 0,
-            ),
-            // Primary bottom shadow
-            BoxShadow(
-              color: shadowColor,
-              offset: const Offset(2, 2),
-              blurRadius: 6,
-              spreadRadius: 1,
-            ),
-            // Secondary, softer bottom shadow for more depth
-            BoxShadow(
-              color: secondShadowColor,
-              offset: const Offset(3, 3),
-              blurRadius: 8,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'Settings',
-            ),
-          ],
-          currentIndex: 0, // Changed currentIndex to 0
-          onTap: (index) {
-            if (index == 0) {
-              Navigator.pushReplacementNamed(context, '/home');
-            } else if (index == 1) {
-              Navigator.pushReplacementNamed(context, '/settings');
-            }
-            // No need for index 2 as it doesn't exist in the items list
-          },
-          selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor ?? Colors.blue,
-          unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent, // Make the BottomNavigationBar background transparent
-          elevation: 0, // Remove default elevation
-        ),
-      ),
+                );
+             }
+         );
+      },
     );
   }
 }

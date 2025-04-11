@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.tkbk"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = flutter.ndkVersion // Use Flutter's NDK version
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -22,20 +22,26 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.tkbk"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "com.thatea.tkbk"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("upload-keystore.jks") // Ensure this matches the filename you just created
+            storePassword = "Thatea_Roing2025" // Replace with the password you just set
+            keyAlias = "upload"                     // This should be "upload"
+            keyPassword = "Thatea_Roing2025" // Replace with the same password (or your key password if different)
+        }
+    }
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true // It's good practice to enable minification for release
+            isShrinkResources = true // Recommended if minifyEnabled is true
         }
     }
 }

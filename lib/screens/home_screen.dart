@@ -5,11 +5,11 @@ import 'package:tkbk/models/song.dart';
 import 'package:tkbk/models/search_result.dart';
 import 'package:tkbk/services/song_service.dart';
 import 'package:tkbk/utils/route_observer.dart' as utils;
-import 'package:tkbk/widgets/custom_header.dart'; // Import the custom header
+import 'package:tkbk/widgets/custom_header.dart';
 
 // Import screen destinations
 import 'all_songs_screen.dart';
-// import 'search_by_number_screen.dart'; // No longer needed
+import 'search_by_number_screen.dart';
 import 'favorite_songs_screen.dart';
 import 'feedback_screen.dart';
 import 'index_screen.dart';
@@ -39,28 +39,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    utils.routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
-  }
-
-  @override
-  void didPopNext() {
-    if (mounted) {
-      _searchFocusNode.unfocus();
+    if (ModalRoute.of(context) is PageRoute) {
+       utils.routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
     }
   }
 
   @override
-  void didPushNext() {
-    if (mounted) {
-      _searchFocusNode.unfocus();
-    }
-  }
-
-  void _onFocusChange() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
+  void didPopNext() { if (mounted) { _searchFocusNode.unfocus(); } }
+  @override
+  void didPushNext() { if (mounted) { _searchFocusNode.unfocus(); } }
+  void _onFocusChange() { if (mounted) { setState(() {}); } }
 
   @override
   void dispose() {
@@ -73,376 +61,158 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   void _searchSongs(String query) {
-    if (_debounceTimer?.isActive ?? false) _debounceTimer?.cancel();
-
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      if (!mounted) return;
-
-      setState(() {
-        if (query.isEmpty) {
-          _searchResults = [];
-        } else {
-          _searchResults = _songs.expand((song) {
-            List<SearchResult> results = [];
-            final sentenceCaseTitle = toSentenceCase(song.title);
-            if (sentenceCaseTitle.toLowerCase().contains(query.toLowerCase())) {
-              results.add(SearchResult(
-                song: song,
-                fieldName: 'title',
-                matchingLine: sentenceCaseTitle,
-                searchTerm: query,
-              ));
-            }
-            if (song.lyrics.isNotEmpty) {
-              for (LyricPart part in song.lyrics) {
-                final matchingLines = _findMatchingLines(part.text, query);
-                results.addAll(matchingLines.map((line) => SearchResult(
-                      song: song,
-                      fieldName: part.key,
-                      matchingLine: line,
-                      searchTerm: query,
-                    )));
-              }
-            }
-            return results;
-          }).toList();
-        }
-      });
-    });
+     if (_debounceTimer?.isActive ?? false) _debounceTimer?.cancel();
+     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+       if (!mounted) return;
+       setState(() {
+         if (query.isEmpty) { _searchResults = []; }
+         else {
+           final lowerQuery = query.toLowerCase();
+           _searchResults = _songs.expand((song) {
+             List<SearchResult> results = [];
+             // Use helper methods defined within the class
+             final sentenceCaseTitle = _toSentenceCase(song.title);
+             if (sentenceCaseTitle.toLowerCase().contains(lowerQuery)) {
+               results.add(SearchResult(song: song, fieldName: 'Title', matchingLine: sentenceCaseTitle, searchTerm: query));
+             }
+             if (song.translation != null && song.translation!.toLowerCase().contains(lowerQuery)) {
+               results.add(SearchResult(song: song, fieldName: 'Translation', matchingLine: song.translation!, searchTerm: query));
+             }
+             if (song.lyrics.isNotEmpty) {
+               for (LyricPart part in song.lyrics) {
+                 // Use helper methods defined within the class
+                 final matchingLines = _findMatchingLines(part.text, lowerQuery);
+                 results.addAll(matchingLines.map((line) => SearchResult(song: song, fieldName: _toSentenceCase(part.key), matchingLine: line, searchTerm: query)));
+               }
+             } return results;
+           }).toList();
+         }
+       });
+     });
   }
 
-  // --- Function to show the Number Grid Dialog (Updated) ---
-  void _showNumberGridDialog(BuildContext context) {
-    final List<Song> currentSongs = _songs; // Use songs from state
-    const int totalSongs = 237;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        // Use AlertDialog but make its content area scrollable
-        return AlertDialog(
-          title: const Text('Select Song Number'),
-          // Set scrollable to true
-          scrollable: true,
-          // Remove the SizedBox wrapper around the GridView
-          content: GridView.builder(
-              // Important: Prevent GridView from shrinking to minimum height
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(), // Let AlertDialog handle scrolling
-              padding: const EdgeInsets.only(top: 10, bottom: 10), // Padding for grid
-              itemCount: totalSongs,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4, // Keep 4 columns
-                mainAxisSpacing: 10.0,
-                crossAxisSpacing: 10.0,
-                // *** ADJUSTED ASPECT RATIO for taller buttons ***
-                childAspectRatio: 1.1, // Closer to 1.0 makes items more square
-              ),
-              itemBuilder: (BuildContext gridContext, int index) {
-                final int songNumber = index + 1;
-                return ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                     padding: EdgeInsets.zero, // Remove internal padding if needed
-                  ),
-                  onPressed: () {
-                    // Action when a number inside the dialog is tapped
-                    Song? targetSong;
-                    try {
-                      targetSong = currentSongs.firstWhere(
-                        (song) => song.number == songNumber,
-                      );
-                    } catch (e) {
-                      targetSong = null;
-                      print('Song number $songNumber not found.');
-                    }
-
-                    // 1. Dismiss the dialog
-                    Navigator.of(dialogContext).pop();
-
-                    // 2. Navigate if song found
-                    if (targetSong != null) {
-                      Navigator.push(
-                        context, // Use original context for navigation
-                        MaterialPageRoute(
-                          builder: (context) => SongDetailScreen(song: targetSong!),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Song data for number $songNumber not found.'),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  },
-                  child: Text(
-                    songNumber.toString(),
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                );
-              },
-            ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('CANCEL'),
-              onPressed: () {
-                Navigator.of(dialogContext).pop(); // Dismiss the dialog
-              },
-            ),
-          ],
-          // Use default padding or adjust if needed
-          contentPadding: const EdgeInsets.fromLTRB(15.0, 20.0, 15.0, 0.0), // Adjusted default padding
-          titlePadding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 10.0),
-        );
-      },
-    );
-  }
-  // --- End of Updated Number Grid Dialog Function ---
-
-  // Build method using your existing structure
+  // --- BUILD METHOD ---
   @override
   Widget build(BuildContext context) {
     bool showResultsOverlay = _searchController.text.isNotEmpty && _searchResults.isNotEmpty;
     final Color baseColor = Theme.of(context).scaffoldBackgroundColor;
+    final Color surfaceColor = Theme.of(context).colorScheme.surfaceVariant;
 
     return Scaffold(
       backgroundColor: baseColor,
       body: Column(
         children: <Widget>[
-          const CustomHeader(title: 'APATANI BIISI KHETA'), // Use the custom header
+          const CustomHeader(title: 'APATANI BIISI KHETA'),
           Padding( // Search Bar Area
             padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-            child: Container( // Search Bar Container Styling
-              decoration: BoxDecoration( /* ... your neumorphic decoration ... */
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: BorderRadius.circular(30.0),
-                boxShadow: [
-                  BoxShadow(blurRadius: 5.0, offset: const Offset(-3, -3), color: Colors.white.withOpacity(0.9)),
-                  BoxShadow(blurRadius: 5.0, offset: const Offset(3, 3), color: Colors.black.withOpacity(0.1)),
-                ],
-              ),
-              child: Row( // Search Bar Row Content
-                children: [
-                  Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0), child: Icon(Icons.search, color: Colors.grey[600])),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      decoration: InputDecoration(
-                        hintText: 'Search songs or lyrics...',
-                        border: InputBorder.none, hintStyle: TextStyle(color: Colors.grey[600]),
-                        enabledBorder: InputBorder.none, focusedBorder: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14.0)),
-                      onChanged: _searchSongs,
-                    ),
-                  ),
-                  if (_searchController.text.isNotEmpty)
-                    IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.grey),
-                      onPressed: () { _searchController.clear(); _searchSongs(''); _searchFocusNode.unfocus(); }),
-                  if (_searchController.text.isEmpty) const SizedBox(width: 48),
-                ],
+            child: Material( // Standard Material Search Bar
+              elevation: 3.0, color: surfaceColor, shadowColor: Colors.black.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(30.0),
+              child: TextField(
+                controller: _searchController, focusNode: _searchFocusNode,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(icon: Icon(Icons.clear, color: Colors.grey[600]), onPressed: () { _searchController.clear(); _searchSongs(''); _searchFocusNode.unfocus(); })
+                      : null,
+                  hintText: 'Search songs or lyrics...', hintStyle: TextStyle(color: Colors.grey[600]),
+                  filled: true, fillColor: Colors.transparent,
+                  border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16.0),
+                ),
+                onChanged: _searchSongs,
               ),
             ),
           ),
-          Expanded( // Main content area below search
+          Expanded( // Main content area
             child: Stack(
               children: [
-                SingleChildScrollView( // Your main buttons area
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
-                        context: context, label: 'ALL SONGS',
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AllSongsScreen())),
-                      ),
-                      // --- MODIFIED BUTTON ACTION ---
-                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
-                        context: context, label: 'SEARCH BY NUMBER',
-                        // Call the function to show the dialog
-                        onPressed: () => _showNumberGridDialog(context),
-                      ),
-                      // --- END OF MODIFIED ACTION ---
-                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
-                        context: context, label: 'FAVORITE SONGS',
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FavoriteSongsScreen())),
-                      ),
-                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
-                        context: context, label: 'FEEDBACK',
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FeedbackScreen())),
-                      ),
-                      _buildHomeButtonNeumorphic( // Your Neumorphic Button
-                        context: context, label: 'INDEX',
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const IndexScreen())),
-                      ),
-                      Padding( // Psalm Text
-                        padding: const EdgeInsets.only(top: 32.0, left: 32.0, right: 32.0),
-                        child: Center(child: RichText(textAlign: TextAlign.center, text: TextSpan(
+                SingleChildScrollView( // Buttons Area
+                  padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+                  child: Column( crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
+                      // Call button builder method from THIS class
+                      _buildHomeButtonNeumorphic(context: context, label: 'ALL SONGS', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AllSongsScreen()))),
+                      _buildHomeButtonNeumorphic(context: context, label: 'SEARCH BY NUMBER', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchByNumberScreen()))),
+                      _buildHomeButtonNeumorphic(context: context, label: 'FAVORITE SONGS', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FavoriteSongsScreen()))),
+                      _buildHomeButtonNeumorphic(context: context, label: 'FEEDBACK', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FeedbackScreen()))),
+                      _buildHomeButtonNeumorphic(context: context, label: 'INDEX', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const IndexScreen()))),
+                      Padding( padding: const EdgeInsets.only(top: 32.0, left: 32.0, right: 32.0), child: Center(child: RichText(textAlign: TextAlign.center, text: TextSpan(
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15),
-                              children: const [
-                                TextSpan(text: 'Bless the LORD, O my soul; and all that is within me, bless his holy name. \n'),
-                                TextSpan(text: '(Psalm 103:1)', style: TextStyle(fontStyle: FontStyle.italic)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (showResultsOverlay) // Search Results Overlay
-                  Positioned.fill(
-                    child: GestureDetector(
-                      onTap: () => _searchFocusNode.unfocus(),
-                      child: Container(
-                        color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
-                        child: ListView.builder( /* ... your search results list ... */
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          itemCount: _searchResults.length,
-                          itemBuilder: (context, index) {
-                            final SearchResult result = _searchResults[index];
-                            final sentenceCaseTitle = toSentenceCase(result.song.title);
-                            return Card( // Your search result card styling
-                              margin: const EdgeInsets.symmetric(vertical: 4.0),
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                              child: Container(
-                                decoration: BoxDecoration( /* ... your neumorphic decoration ... */
-                                  color: Theme.of(context).scaffoldBackgroundColor,
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  boxShadow: [
-                                    BoxShadow(blurRadius: 3.0, offset: const Offset(-2, -2), color: Colors.white.withOpacity(0.8)),
-                                    BoxShadow(blurRadius: 3.0, offset: const Offset(2, 2), color: Colors.black.withOpacity(0.1)),
-                                  ],
-                                ),
-                                child: ListTile(
-                                  title: RichText(text: _highlightSearchTerm(result.matchingLine, result.searchTerm), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                  subtitle: Text("${result.song.number}. $sentenceCaseTitle"),
-                                  onTap: () {
-                                    _searchFocusNode.unfocus();
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) => SongDetailScreen(song: result.song)));
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                if (_searchController.text.isNotEmpty && _searchResults.isEmpty) // No results message
-                  Positioned.fill( /* ... No results found overlay ... */
-                    child: GestureDetector(
-                      onTap: () => _searchFocusNode.unfocus(),
-                      child: Container(
-                        color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
-                        child: const Center(child: Text("No results found."))),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+                              children: const [ TextSpan(text: 'Bless the LORD, O my soul; and all that is within me, bless his holy name. \n'), TextSpan(text: '(Psalm 103:1)', style: TextStyle(fontStyle: FontStyle.italic)), ],
+                            ), ), ), ),
+                    ], ),
+                ), // <<<--- Added Comma
+                // Search Results Overlay
+                if (showResultsOverlay) Positioned.fill( child: GestureDetector( onTap: () => _searchFocusNode.unfocus(), child: Container( color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.98),
+                        child: ListView.builder( padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0), itemCount: _searchResults.length,
+                          itemBuilder: (context, index) { final SearchResult result = _searchResults[index]; final originalTitle = result.song.title;
+                            return Card( margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0), color: Theme.of(context).cardColor, elevation: 1.0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                              child: ListTile(
+                                // Call highlight method from THIS class
+                                title: RichText(text: _highlightSearchTerm(result.matchingLine, result.searchTerm), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                subtitle: Text("${result.song.number}. $originalTitle (Match in: ${result.fieldName})", maxLines: 1, overflow: TextOverflow.ellipsis),
+                                onTap: () { _searchFocusNode.unfocus(); Navigator.push(context, MaterialPageRoute(builder: (context) => SongDetailScreen(song: result.song))); },
+                              ), ); }, ), ), ), ), // <<<--- Added Comma
+                 // No Results Message
+                 if (_searchController.text.isNotEmpty && _searchResults.isEmpty) Positioned.fill( child: GestureDetector( onTap: () => _searchFocusNode.unfocus(), child: Container( color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95), child: const Center(child: Text("No results found.")) ), ), )
+              ], // End Stack children
+            ), // End Stack
+          ), // End Expanded
         ],
       ),
     );
   }
 
-  // Neumorphic Button Widget - Inset Style Attempt
-  Widget _buildHomeButtonNeumorphic({
-    required BuildContext context,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
+
+  // --- Helper Functions MOVED INSIDE _HomeScreenState ---
+
+  // Neumorphic Button Widget (Inset Style Attempt)
+  Widget _buildHomeButtonNeumorphic({ required BuildContext context, required String label, required VoidCallback onPressed }) {
     final Color baseColor = Theme.of(context).scaffoldBackgroundColor;
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    // Define sharp shadow colors
-    // Dark shadow (for top-left) - needs to be noticeable
     final Color darkShadow = isDarkMode ? Colors.black.withOpacity(0.7) : Colors.grey.shade500.withOpacity(0.8);
-    // Light shadow (for bottom-right) - often pure white works well in light mode
     final Color lightShadow = isDarkMode ? Colors.white.withOpacity(0.10) : Colors.white.withOpacity(0.9);
-
-    // Define subtle gradient colors based on baseColor
-    final Color slightlyDarker = Color.lerp(baseColor, Colors.black, 0.03)!; // Darken slightly
-    final Color slightlyLighter = Color.lerp(baseColor, Colors.white, 0.05)!; // Lighten slightly
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9.0, horizontal: 32.0),
-      child: Material(
-        color: Colors.transparent, // Make Material transparent, Container holds visuals
-        borderRadius: BorderRadius.circular(15.0),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(15.0),
-          onTap: onPressed,
-          splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            decoration: BoxDecoration(
-              color: baseColor, // Base color on the container
-              borderRadius: BorderRadius.circular(15.0),
-              // Subtle gradient to enhance inset look
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                   slightlyDarker, // Darker shade top-left
-                   baseColor, // Base in middle
-                   slightlyLighter, // Lighter shade bottom-right
-                ],
-                stops: const [0.0, 0.5, 1.0], // Adjust stops for gradient spread
-              ),
-              boxShadow: [
-                // Dark shadow top-left (Inset)
-                BoxShadow(
-                  blurRadius: 3.0,    // Sharp blur
-                  spreadRadius: 1.0,   // Small spread
-                  offset: const Offset(-3, -3), // Negative offset
-                  color: darkShadow,
-                ),
-                // Light shadow bottom-right (Inset)
-                BoxShadow(
-                  blurRadius: 3.0,    // Sharp blur
-                  spreadRadius: 1.0,   // Small spread
-                  offset: const Offset(3, 3),  // Positive offset
-                  color: lightShadow,
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold, // Keep label bold
-                ),
-              ),
-            ),
+    final Color slightlyDarker = Color.lerp(baseColor, Colors.black, 0.03)!;
+    final Color slightlyLighter = Color.lerp(baseColor, Colors.white, 0.05)!;
+    return Padding( padding: const EdgeInsets.symmetric(vertical: 9.0, horizontal: 32.0),
+      child: Material( color: Colors.transparent, borderRadius: BorderRadius.circular(15.0),
+        child: InkWell( borderRadius: BorderRadius.circular(15.0), onTap: onPressed, splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1), highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+          child: Container( padding: const EdgeInsets.symmetric(vertical: 16.0),
+            decoration: BoxDecoration( color: baseColor, borderRadius: BorderRadius.circular(15.0),
+              gradient: LinearGradient( begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [slightlyDarker, baseColor, slightlyLighter], stops: const [0.0, 0.5, 1.0]),
+              boxShadow: [ BoxShadow(blurRadius: 3.0, spreadRadius: 1.0, offset: const Offset(-3, -3), color: darkShadow), BoxShadow(blurRadius: 3.0, spreadRadius: 1.0, offset: const Offset(3, 3), color: lightShadow), ],
+            ), child: Center( child: Text(label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), ),
           ),
         ),
       ),
     );
   }
 
-  // --- Helper Functions (remain unchanged) ---
+  // Helper function to find matching lines
   List<String> _findMatchingLines(String text, String query) {
     if (query.isEmpty) return [];
     final lines = text.split('\n');
     return lines.where((line) => line.toLowerCase().contains(query.toLowerCase())).toList();
   }
 
-  String toSentenceCase(String? text) {
+  // Helper function for sentence case
+  String _toSentenceCase(String? text) { // Renamed slightly to avoid conflict
     if (text == null || text.isEmpty) return '';
+    if (text.isEmpty) return '';
+    // Handle keys like 'stanza1' -> 'Stanza1'
+    if (text.contains(RegExp(r'[0-9]'))) {
+        // Simple capitalize first letter if it contains numbers
+        return text[0].toUpperCase() + text.substring(1);
+    }
+    // Otherwise, full sentence case
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 
+  // Helper function to highlight search term
   TextSpan _highlightSearchTerm(String text, String searchTerm) {
-     if (searchTerm.isEmpty || text.isEmpty) { return TextSpan(text: text, style: TextStyle(color: Colors.grey[600])); } // Added base style
-     final TextStyle defaultStyle = TextStyle(color: Colors.grey[600]); // Use a default style
+     final TextStyle defaultStyle = TextStyle(color: Colors.grey[600]);
      final TextStyle highlightStyle = const TextStyle( fontWeight: FontWeight.bold, backgroundColor: Colors.yellow, color: Colors.black );
+     if (searchTerm.isEmpty || text.isEmpty) { return TextSpan(text: text, style: defaultStyle); }
      final lowerCaseText = text.toLowerCase();
      final lowerCaseSearchTerm = searchTerm.toLowerCase();
      final List<TextSpan> spans = [];
@@ -458,5 +228,5 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
      }
      return TextSpan(children: spans);
   }
-}
-// Remember to have lib/utils/route_observer.dart correctly defined
+  // --- END Helper Functions ---
+} // End of _HomeScreenState class

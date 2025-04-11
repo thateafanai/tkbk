@@ -5,56 +5,25 @@ import 'screens/settings_screen.dart';
 import 'services/song_service.dart';
 import 'package:tkbk/utils/route_observer.dart' as utils;
 import 'state/settings_state.dart'; // Import the settings state
+import 'state/favorites_state.dart'; // Import FavoritesState
 
 void main() async {
-  // REQUIRED: Ensures bindings are ready before async calls like SharedPreferences
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Load songs AND settings before running the app
   await Future.wait([
       songService.loadSongs(),
-      settingsState.loadSettings(), // Call the load method here
+      settingsState.loadSettings(),
+      favoritesState.loadFavorites(),
   ]);
-
-  // Now run the app
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-// ... Keep the rest of your main.dart (MyApp, MainScreen, helpers) AS IS ...
-// (The code for MyApp using ValueListenableBuilders, etc., looks correct)
-
-// Helper function to safely apply font size factor
-TextStyle? _applyFontSizeFactor(TextStyle? style, double factor) {
-  if (style?.fontSize == null) return style; // Don't modify if base size is null
-  // Use a small tolerance for floating point comparison
-  if ((factor - 1.0).abs() < 0.01) return style; // Avoid unnecessary changes
-  return style!.copyWith(fontSize: style.fontSize! * factor);
-}
-
-// Helper function to create an adjusted TextTheme
-TextTheme createAdjustedTextTheme(TextTheme base, double factor) {
-  return TextTheme(
-    displayLarge: _applyFontSizeFactor(base.displayLarge, factor),
-    displayMedium: _applyFontSizeFactor(base.displayMedium, factor),
-    displaySmall: _applyFontSizeFactor(base.displaySmall, factor),
-    headlineLarge: _applyFontSizeFactor(base.headlineLarge, factor),
-    headlineMedium: _applyFontSizeFactor(base.headlineMedium, factor),
-    headlineSmall: _applyFontSizeFactor(base.headlineSmall, factor),
-    titleLarge: _applyFontSizeFactor(base.titleLarge, factor),
-    titleMedium: _applyFontSizeFactor(base.titleMedium, factor),
-    titleSmall: _applyFontSizeFactor(base.titleSmall, factor),
-    bodyLarge: _applyFontSizeFactor(base.bodyLarge, factor),
-    bodyMedium: _applyFontSizeFactor(base.bodyMedium, factor),
-    bodySmall: _applyFontSizeFactor(base.bodySmall, factor),
-    labelLarge: _applyFontSizeFactor(base.labelLarge, factor),
-    labelMedium: _applyFontSizeFactor(base.labelMedium, factor),
-    labelSmall: _applyFontSizeFactor(base.labelSmall, factor),
-  );
-}
-
+// --- REMOVED Font Size Helper Functions ---
+// TextStyle? _applyFontSizeFactor(...) { ... }
+// TextTheme createAdjustedTextTheme(...) { ... }
+// --- END REMOVED ---
 
 class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -62,61 +31,55 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: settingsState.themeMode,
       builder: (context, mode, child) {
-        // Listen to font size changes
-        return ValueListenableBuilder<double>(
-          valueListenable: settingsState.fontSize,
-          builder: (context, fontSize, child) {
-            // Listen to font selection changes
-            return ValueListenableBuilder<String>(
-              valueListenable: settingsState.selectedFont,
-              builder: (context, selectedFont, child) {
-                String? fontFamily;
-                if (selectedFont != 'Default') {
-                  fontFamily = selectedFont;
-                }
+        // Listen ONLY to font FAMILY changes here
+        return ValueListenableBuilder<String>(
+          valueListenable: settingsState.selectedFont,
+          builder: (context, selectedFont, child) {
+            String? fontFamily;
+            if (selectedFont != 'Default') {
+              fontFamily = selectedFont;
+            }
 
-                // Function to create ThemeData with adjusted font size and family
-                ThemeData generateThemeData(Brightness brightness) {
-                  final baseTheme = ThemeData(
-                    brightness: brightness,
-                    colorScheme: ColorScheme.fromSeed(
-                      seedColor: Colors.blue,
-                      brightness: brightness,
-                    ),
-                    useMaterial3: true,
-                  );
+            // Function to create ThemeData
+            ThemeData generateThemeData(Brightness brightness) {
+              final baseTheme = ThemeData(
+                brightness: brightness,
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: brightness),
+                useMaterial3: true,
+              );
+              // Apply ONLY font family globally
+              return baseTheme.copyWith(
+                textTheme: baseTheme.textTheme.apply(fontFamily: fontFamily),
+                appBarTheme: baseTheme.appBarTheme.copyWith(
+                  backgroundColor: Colors.indigo[900], // Consistent Header Color
+                  foregroundColor: Colors.white,
+                  elevation: 4.0, // Add elevation to custom header via AppBar theme
+                ),
+                // --- MODIFIED/ADDED Bottom Navigation Bar Theme ---
+                bottomNavigationBarTheme: baseTheme.bottomNavigationBarTheme.copyWith(
+                  selectedItemColor: Colors.blue, // Or theme primary
+                  unselectedItemColor: Colors.grey,
+                  // *** HIDE the indicator ***
+                  // Make background transparent if using neumorphic container wrapper
+                  backgroundColor: Colors.transparent,
+                  elevation: 0, // Remove default elevation if using container
+                ),
+                // --- END MODIFICATION ---
+              );
+            }
 
-                  // Create adjusted text theme safely
-                  final adjustedTextTheme = createAdjustedTextTheme(
-                      baseTheme.textTheme, fontSize / 16.0); // Base size 16.0
-
-                  return baseTheme.copyWith(
-                    textTheme: adjustedTextTheme.apply(fontFamily: fontFamily), // Apply font family here
-                    appBarTheme: baseTheme.appBarTheme.copyWith(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
-                    bottomNavigationBarTheme: baseTheme.bottomNavigationBarTheme.copyWith(
-                      selectedItemColor: Colors.blue,
-                      unselectedItemColor: Colors.grey,
-                    ),
-                  );
-                }
-
-                return MaterialApp(
-                  navigatorObservers: [utils.routeObserver],
-                  title: 'APATANI BIISI KHETA',
-                  theme: generateThemeData(Brightness.light), // Generate light theme
-                  darkTheme: generateThemeData(Brightness.dark), // Generate dark theme
-                  themeMode: mode, // Use the theme mode from the notifier
-                  home: const MainScreen(),
-                  debugShowCheckedModeBanner: false,
-                  routes: {
-                    '/home': (context) => const MainScreen(initialIndex: 0), // Set index to 0 for Home
-                    '/settings': (context) => const MainScreen(initialIndex: 1), // Set index to 1 for Settings
-                  },
-                );
-              },
+            return MaterialApp(
+              navigatorObservers: [utils.routeObserver],
+              title: 'APATANI BIISI KHETA',
+              theme: generateThemeData(Brightness.light), // Generate light theme
+              darkTheme: generateThemeData(Brightness.dark), // Generate dark theme
+              themeMode: mode,
+              home: const MainScreen(),
+              debugShowCheckedModeBanner: false,
+              routes: {
+                 '/home': (context) => const MainScreen(initialIndex: 0),
+                 '/settings': (context) => const MainScreen(initialIndex: 1),
+               },
             );
           },
         );
