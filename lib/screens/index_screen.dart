@@ -1,64 +1,58 @@
 // lib/screens/index_screen.dart
 import 'package:flutter/material.dart';
-import 'package:tkbk/widgets/custom_header.dart';
 import '../models/song.dart';
 import '../services/song_service.dart';
-import 'song_detail_screen.dart';
+import '../state/settings_state.dart';
+import '../widgets/custom_header.dart';
+import '../widgets/song_list_item.dart'; // Import the list item WIDGET
+import '../screens/song_detail_screen.dart';
 
 class IndexScreen extends StatelessWidget {
-  const IndexScreen({Key? key}) : super(key: key);
+  const IndexScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final List<Song> originalSongs = songService.songs;
-
+    // This list holds the alphabetically sorted songs
     final List<Song> sortedSongs = List<Song>.from(originalSongs)
       ..sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
 
-    return Scaffold(
-      body: Column(
-        children: [
-          const CustomHeader(title: 'Index (Alphabetical)'),
-          Expanded(
-            child: sortedSongs.isEmpty
-                ? const Center(
-                    child: Text('No songs loaded. Check assets/songs.json and restart the app.'),
-                  )
-                : ListView.builder( // Changed back to ListView.builder and handle spacing with Card
-                    padding: const EdgeInsets.all(8.0),
-                    itemCount: sortedSongs.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final Song currentSong = sortedSongs[index];
-                      return Card( // Wrap ListTile with a Card
-                        margin: const EdgeInsets.symmetric(vertical: 4.0), // Add vertical spacing
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        elevation: 2, // Optional: Subtle shadow
-                        child: ListTile(
-                          title: Text(currentSong.title),
-                          trailing: Text(
-                            currentSong.number.toString(),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.outline,
-                              fontSize: 14,
-                            ),
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SongDetailScreen(song: currentSong),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
+    if (sortedSongs.isEmpty) {
+       return const Scaffold(
+         appBar: CustomHeader(title: 'Index (Alphabetical)', showBackButton: true),
+         body: Center(child: Text('No songs loaded.')),
+       );
+     }
+
+    // Listen to font size changes
+    return ValueListenableBuilder<double>(
+        valueListenable: settingsState.fontSize,
+        builder: (context, _, child) {
+           // Calculate factor based on current font size from state
+           final double fontSizeFactor = settingsState.fontSizeFactor;
+
+           return Scaffold(
+             appBar: const CustomHeader(title: 'Index (Alphabetical)', showBackButton: true),
+             body: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                // Use the length of the sorted list
+                itemCount: sortedSongs.length,
+                itemBuilder: (BuildContext context, int index) {
+                  // Get the song from the CORRECT list variable: sortedSongs
+                  final Song currentSong = sortedSongs[index];
+
+                  // Instantiate the SongListItem widget class using the correct song object
+                  return SongListItem(
+                    // Use key based on the song from the correct list
+                    key: ValueKey(currentSong.number),
+                    // Pass the song from the correct list
+                    song: currentSong,
+                    fontSizeFactor: fontSizeFactor,
+                  );
+                },
+             ),
+           );
+        }
     );
   }
 }

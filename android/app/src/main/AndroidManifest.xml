@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Make sure package="com.example.tkbk" matches your actual package name -->
     <application
-        android:label="Apatani Biisi Kheta"
+        android:label="TKBK"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
