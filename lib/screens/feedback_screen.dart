@@ -25,7 +25,7 @@ class FeedbackScreen extends StatelessWidget {
   }
 
   void _shareApp(BuildContext context) {
-    const String playStoreLink = 'https://play.google.com/apps/internaltest/4700830666854462152'; // Your internal test link
+    const String playStoreLink = 'https://play.google.com/store/apps/details?id=com.thatea.tkbk'; // Your internal test link
     Share.share(
       'Check out the Apatani Biisi Kheta App! You can become a tester and help us improve it by joining our internal testing program here: $playStoreLink',
     );
