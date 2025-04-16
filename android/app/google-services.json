@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "371710579657",
+    "project_id": "apatani-biisi-kheta",
+    "storage_bucket": "apatani-biisi-kheta.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:371710579657:android:19031f39eec4a3514f4e18",
+        "android_client_info": {
+          "package_name": "com.thatea.tkbk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxjpD_8YtC5WxstJLu_D9Zjcxrn3h8wRA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
