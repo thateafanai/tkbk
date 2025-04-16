@@ -3,6 +3,9 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -49,3 +52,18 @@ android {
 flutter {
     source = "../.."
 }
+
+// *** ADD/MODIFY Dependencies Block ***
+dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:33.1.1")) // Use latest BOM version
+
+    // Add the dependencies for Firebase products you want to use
+    implementation("com.google.firebase:firebase-analytics-ktx") // Use ktx version for Kotlin benefits
+    implementation("com.google.firebase:firebase-crashlytics-ktx") // Use ktx version
+
+    // Add other Firebase dependencies if needed
+
+    // Keep other existing dependencies (like implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"))
+    // implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.23") // Example, use your actual Kotlin version if needed explicitly
+}
+// *** END Dependencies Block ***

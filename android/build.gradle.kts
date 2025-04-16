@@ -1,3 +1,12 @@
+plugins {
+    // Make sure you have IDs for existing plugins like these (versions might differ)
+    id("com.android.application") apply false
+    id("org.jetbrains.kotlin.android") apply false
+    id("com.google.firebase.crashlytics") version "2.9.9" apply false // Use the latest compatible version
+    id("com.google.gms.google-services") apply false
+}
+
+
 allprojects {
     repositories {
         google()

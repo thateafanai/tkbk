@@ -218,7 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                      dense: true,
                      title: Text('Privacy Policy', style: textTheme.titleSmall),
                      trailing: const Icon(Icons.launch_outlined, size: 18, color: Colors.blue),
-                     onTap: () => _launchUrl(policyUrl), // Launch URL on tap
+                     onTap: () => _launchUrl(Uri.parse('https://babfo.org/privacy-policy')), // Launch URL on tap
                    ),
                    const Divider(height: 1, indent: 16, endIndent: 16),
                    // Rate App Link

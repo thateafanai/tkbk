@@ -13,7 +13,7 @@ class FeedbackScreen extends StatelessWidget {
 
   // --- Your _launchWhatsApp and _shareApp functions remain the same ---
   Future<void> _launchWhatsApp() async {
-    const String phoneNumber = '9774912873';
+    const String phoneNumber = '+918575199498';
     const String message = 'Hi... Greetings to you, I have some feedback for the Apatani Biisi Kheta App..';
     final String encodedMessage = Uri.encodeComponent(message);
     final Uri whatsappUri = Uri.parse('https://wa.me/$phoneNumber?text=$encodedMessage');
@@ -27,7 +27,7 @@ class FeedbackScreen extends StatelessWidget {
   void _shareApp(BuildContext context) {
     const String playStoreLink = 'https://play.google.com/store/apps/details?id=com.thatea.tkbk'; // Your internal test link
     Share.share(
-      'Check out the Apatani Biisi Kheta App! You can become a tester and help us improve it by joining our internal testing program here: $playStoreLink',
+      'Check out and install the Apatani Biisi Kheta App! $playStoreLink',
     );
   }
   // --- End of your functions ---
