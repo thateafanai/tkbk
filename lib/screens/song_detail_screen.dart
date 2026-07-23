@@ -17,6 +17,50 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
   final double _minFontSize = 10.0;
   final double _maxFontSize = 30.0;
 
+  // Returns the verse number (e.g. "1") for stanza keys, or a display name
+  // (e.g. "Chorus") for non-stanza parts like chorus/refrain/outro.
+  String _verseLabel(String key) {
+    final match = RegExp(r'^stanza(\d+)$').firstMatch(key.toLowerCase());
+    if (match != null) return match.group(1)!;
+    if (key.isEmpty) return key;
+    return key[0].toUpperCase() + key.substring(1).toLowerCase();
+  }
+
+  Widget _buildLyricPart(LyricPart part, TextStyle? baseStyle, TextStyle? italicStyle) {
+    final label = _verseLabel(part.key);
+    final bool isVerseNumber = int.tryParse(label) != null;
+    final labelStyle = baseStyle?.copyWith(
+      fontWeight: FontWeight.bold,
+      color: Theme.of(context).colorScheme.primary,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 28.0,
+            child: Text(isVerseNumber ? label : '', style: labelStyle),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isVerseNumber)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4.0),
+                    child: Text(label, style: labelStyle?.copyWith(fontStyle: FontStyle.italic)),
+                  ),
+                Text(part.text, style: part.isChorus ? italicStyle : baseStyle),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final baseStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6, fontSize: _currentFontSize);
@@ -68,7 +112,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                      const Divider(height: 20, thickness: 1),
                   // Lyrics
                   for (LyricPart part in widget.song.lyrics)
-                    Padding(padding: const EdgeInsets.only(bottom: 24.0), child: Text(part.text, style: part.isChorus ? italicStyle : baseStyle)),
+                    _buildLyricPart(part, baseStyle, italicStyle),
                 ],
               ),
             ),
