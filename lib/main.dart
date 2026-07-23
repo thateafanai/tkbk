@@ -191,7 +191,7 @@ class _MainScreenState extends State<MainScreen> with RouteAware { // Added Rout
         case 1: screenName = 'SettingsScreen'; break;
         default: screenName = 'UnknownScreen_Index$index';
      }
-     analytics.setCurrentScreen( screenName: screenName, screenClassOverride: screenName );
+     analytics.logScreenView( screenName: screenName, screenClass: screenName );
      print("Analytics: Logged screen view: $screenName");
   }
   // --- End Logging Function ---

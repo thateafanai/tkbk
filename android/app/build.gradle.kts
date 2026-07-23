@@ -12,7 +12,7 @@ android {
     namespace = "com.example.tkbk"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion // Use Flutter's NDK version
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -45,6 +45,10 @@ android {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true // It's good practice to enable minification for release
             isShrinkResources = true // Recommended if minifyEnabled is true
+
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
 }
@@ -58,8 +62,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.1")) // Use latest BOM version
 
     // Add the dependencies for Firebase products you want to use
-    implementation("com.google.firebase:firebase-analytics-ktx") // Use ktx version for Kotlin benefits
-    implementation("com.google.firebase:firebase-crashlytics-ktx") // Use ktx version
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-crashlytics")
 
     // Add other Firebase dependencies if needed
 
