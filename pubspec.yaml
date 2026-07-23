@@ -3,7 +3,8 @@ description: "A new Flutter project."
 publish_to: 'none'
 
 # Version: Remember to update before release!
-version: 1.1.0+6 # Or your current version
+version: 1.1.0+10
+ # Or your current version
 
 environment:
   sdk: ^3.7.2
@@ -18,9 +19,12 @@ dependencies:
   shared_preferences: ^2.5.3
   share_plus: ^10.1.4
   package_info_plus: ^8.3.0
-  firebase_core: ^2.16.0
-  firebase_crashlytics: ^3.2.0
-  firebase_analytics: ^10.10.7
+  firebase_core: ^4.12.1
+  firebase_crashlytics: ^5.2.6
+  firebase_analytics: ^12.4.5
+  sqflite: ^2.0.0+4
+  path_provider: ^2.0.15
+  firebase_messaging: ^16.4.3
 
 dev_dependencies:
   flutter_test:
