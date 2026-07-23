@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Built app bundles/APKs shouldn't be committed to source control
+*.aab
+*.apk
