@@ -1,11 +1,11 @@
 {
-    "name": "tkbk",
-    "short_name": "tkbk",
+    "name": "Apatani Biisi Kheta",
+    "short_name": "Biisi Kheta",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#1A237E",
+    "description": "Apatani Baptist hymnal — songs, search, favorites, and daily Scripture.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
