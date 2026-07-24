@@ -1,4 +1,5 @@
 // lib/screens/song_detail_screen.dart
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import '../models/song.dart';
 import '../services/song_service.dart';
@@ -24,10 +25,90 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
   double? _pinchStartDistance;
   double _pinchStartFontSize = 16.0;
 
+  // --- Pitch pipe: play the song's key note ---
+  final AudioPlayer _player = AudioPlayer();
+  bool _isPlaying = false;
+  // Chromatic tone files (assets/tones/*.wav), index 0 = C .. 11 = B.
+  static const List<String> _noteFiles = [
+    'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'
+  ];
+  static const Map<String, int> _letterIndex = {
+    'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+  };
+
   @override
   void initState() {
     super.initState();
     _currentFontSize = widget.initialFontSize ?? _currentFontSize;
+    _player.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => _isPlaying = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  // Resolves a key string ("G", "Db", "Ab/G", "E, lah is Em") to its tone asset,
+  // or null if there's no recognizable root note.
+  String? _toneAssetForKey(String? key) {
+    if (key == null) return null;
+    final s = key.trim();
+    if (s.isEmpty) return null;
+    final base = _letterIndex[s[0].toUpperCase()];
+    if (base == null) return null;
+    int idx = base;
+    if (s.length > 1) {
+      final accidental = s[1];
+      if (accidental == 'b' || accidental == '♭') {
+        idx -= 1;
+      } else if (accidental == '#' || accidental == '♯') {
+        idx += 1;
+      }
+    }
+    idx = (idx + 12) % 12;
+    return 'tones/${_noteFiles[idx]}.wav';
+  }
+
+  Future<void> _togglePitch(String asset) async {
+    try {
+      if (_isPlaying) {
+        await _player.stop();
+        if (mounted) setState(() => _isPlaying = false);
+        return;
+      }
+      await _player.stop();
+      await _player.play(AssetSource(asset));
+      if (mounted) setState(() => _isPlaying = true);
+    } catch (_) {
+      if (mounted) setState(() => _isPlaying = false);
+    }
+  }
+
+  Widget _buildPitchButton(String asset) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Material(
+      color: primary.withOpacity(0.10),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => _togglePitch(asset),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_isPlaying ? Icons.stop_rounded : Icons.music_note, size: 18, color: primary),
+              const SizedBox(width: 5),
+              Text(_isPlaying ? 'Stop' : 'Hear key',
+                  style: TextStyle(color: primary, fontWeight: FontWeight.w600, fontSize: 13)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   bool get _isPinching => _pointers.length >= 2;
@@ -206,7 +287,18 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                   if (widget.song.translation != null && widget.song.translation!.isNotEmpty)
                     Padding(padding: const EdgeInsets.only(bottom: 4.0), child: Text('Translation: ${widget.song.translation}', style: infoStyle)),
                   if (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty)
-                    Padding(padding: const EdgeInsets.only(bottom: 12.0), child: Text('Key: ${widget.song.musicKey}', style: infoStyle)),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Row(
+                        children: [
+                          Text('Key: ${widget.song.musicKey}', style: infoStyle),
+                          if (_toneAssetForKey(widget.song.musicKey) != null) ...[
+                            const SizedBox(width: 12),
+                            _buildPitchButton(_toneAssetForKey(widget.song.musicKey)!),
+                          ],
+                        ],
+                      ),
+                    ),
                   if ((widget.song.translation != null && widget.song.translation!.isNotEmpty) || (widget.song.musicKey != null && widget.song.musicKey!.isNotEmpty))
                      const Divider(height: 20, thickness: 1),
                   // Lyrics
