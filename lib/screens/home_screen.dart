@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:tkbk/models/song.dart';
 import 'package:tkbk/models/search_result.dart';
+import 'package:tkbk/services/message_store.dart';
+import 'package:tkbk/services/notification_service.dart';
 import 'package:tkbk/services/song_service.dart';
 import 'package:tkbk/utils/route_observer.dart' as utils;
 import 'package:tkbk/widgets/custom_header.dart';
@@ -102,7 +104,49 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       backgroundColor: baseColor,
       body: Column(
         children: <Widget>[
-          const CustomHeader(title: 'APATANI BIISI KHETA'),
+          CustomHeader(
+            title: 'APATANI BIISI KHETA',
+            actions: [
+              ValueListenableBuilder<int>(
+                valueListenable: messageStore.unreadCount,
+                builder: (context, unread, _) {
+                  return IconButton(
+                    tooltip: 'Scripture & messages',
+                    onPressed: () => notificationService.openInbox(),
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(Icons.menu_book, color: Colors.white),
+                        if (unread > 0)
+                          Positioned(
+                            right: -3,
+                            top: -3,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFD8B25A),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                unread > 9 ? '9+' : '$unread',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFF1A237E),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
           Padding( // Search Bar Area
             padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
             child: Material( // Standard Material Search Bar

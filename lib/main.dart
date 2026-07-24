@@ -8,11 +8,14 @@ import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart'; // Ensure this file exists and is configured
 
 // Your App Imports
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
+import 'services/message_store.dart';
+import 'services/notification_service.dart';
 import 'services/song_service.dart';
 import 'package:tkbk/utils/route_observer.dart' as utils; // Ensure path is correct
 import 'state/settings_state.dart';
@@ -38,6 +41,10 @@ void main() async {
       FlutterError.onError = (errorDetails) {
         FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
       };
+      // Must be registered here (top-level function, before runApp) so FCM
+      // can invoke it in a background isolate.
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      notificationService.initialize();
        print("Firebase initialized successfully. Crashlytics handlers configured.");
     } else {
       print("Firebase.apps is empty after initialization attempt (unexpected).");
@@ -54,6 +61,7 @@ void main() async {
       songService.loadSongs(),
       settingsState.loadSettings(),
       favoritesState.loadFavorites(),
+      messageStore.load(),
     ]);
     print("Initial app data loaded successfully.");
   } catch (e, s) {
@@ -111,6 +119,8 @@ class MyApp extends StatelessWidget {
             }
 
             return MaterialApp(
+              navigatorKey: notificationService.navigatorKey,
+              scaffoldMessengerKey: notificationService.scaffoldMessengerKey,
               navigatorObservers: [utils.routeObserver, analyticsObserver], // Added analyticsObserver
               title: 'APATANI BIISI KHETA',
               theme: generateThemeData(Brightness.light),

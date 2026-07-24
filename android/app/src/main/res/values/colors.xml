@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Indigo 900 — matches the app header; used to tint FCM notifications. -->
+    <color name="notification_color">#1A237E</color>
+</resources>
