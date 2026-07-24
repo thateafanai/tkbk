@@ -99,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final textTheme = Theme.of(context).textTheme;
     // Define URLs for easier management
     final Uri playStoreUrl = Uri.parse('https://play.google.com/store/apps/details?id=com.thatea.tkbk'); // Replace with your actual package ID
-    final Uri policyUrl = Uri.parse('https://thateafanai.github.io/tkbk/privacy_policy.html'); // Replace with your actual policy URL
+    final Uri policyUrl = Uri.parse('https://babfo.org/tkbk-privacy-policy'); // Replace with your actual policy URL
 
     return Scaffold(
       // Use your custom header in the appBar slot
@@ -218,7 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                      dense: true,
                      title: Text('Privacy Policy', style: textTheme.titleSmall),
                      trailing: const Icon(Icons.launch_outlined, size: 18, color: Colors.blue),
-                     onTap: () => _launchUrl(Uri.parse('https://babfo.org/privacy-policy')), // Launch URL on tap
+                     onTap: () => _launchUrl(Uri.parse('https://babfo.org/tkbk-privacy-policy')), // Launch URL on tap
                    ),
                    const Divider(height: 1, indent: 16, endIndent: 16),
                    // Rate App Link

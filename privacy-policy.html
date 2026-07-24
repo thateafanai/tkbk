@@ -1,210 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy - Apatani Biisi Kheta</title>
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: #f7f8fa;
-      color: #222b32;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Apatani Biisi Kheta</title>
+<style>
+  :root {
+    --indigo: #1A237E;
+    --indigo-soft: #3949AB;
+    --gold: #9C7724;
+    --bg: #F6F7FB;
+    --panel: #FFFFFF;
+    --ink: #23283A;
+    --muted: #5C6478;
+    --line: rgba(26,35,126,0.12);
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --serif: Georgia, "Times New Roman", serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --indigo: #8791DD; --indigo-soft: #A6AEEA; --gold: #D8B25A;
+      --bg: #0E0F16; --panel: #171925; --ink: #E7E9F2; --muted: #9AA0B5;
+      --line: rgba(255,255,255,0.10);
     }
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.7;
-      max-width: 900px;
-      margin: 0 auto;
-      background: #f7f8fa;
-      color: #222b32;
-      padding: 32px 32px 32px 32px;
-      box-sizing: border-box;
-    }
-    h1, h2 {
-      color: #2c3e50;
-    }
-    h1 {
-      font-size: 2.2em;
-      margin-bottom: 0.3em;
-    }
-    h2 {
-      margin-top: 2em;
-      font-size: 1.3em;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 0.2em;
-    }
-    h3 {
-      margin-top: 1.3em;
-      color: #224466;
-      font-size: 1.1em;
-    }
-    ul {
-      margin-left: 22px;
-    }
-    a {
-      color: #1a70b8;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    code {
-      background: #eef1f4;
-      border-radius: 4px;
-      padding: 2px 4px;
-      font-size: 0.95em;
-      color: #37506c;
-    }
-    strong {
-      color: #183952;
-    }
-    .section {
-      margin-bottom: 2em;
-    }
-    .contact {
-      margin-top: 1.2em;
-      background: #f3f6f9;
-      padding: 1.2em 1.6em;
-      border-radius: 7px;
-      font-size: 1.07em;
-    }
-    /* Responsive design for mobile */
-    @media (max-width: 600px) {
-      body {
-        padding: 18px 5vw 18px 5vw;
-        font-size: 1em;
-      }
-      h1 {
-        font-size: 1.5em;
-      }
-      h2 {
-        font-size: 1.05em;
-      }
-      .contact {
-        padding: 1em 4vw;
-        font-size: 1em;
-      }
-      ul {
-        margin-left: 14px;
-      }
-    }
-  </style>
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.7; font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header.masthead {
+    background: var(--indigo);
+    color: #fff;
+    padding: 46px 24px 40px;
+    text-align: center;
+  }
+  @media (prefers-color-scheme: dark) { header.masthead { background: #12162e; } }
+  header.masthead .eyebrow {
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    color: #E4C063; font-weight: 700; margin-bottom: 12px;
+  }
+  header.masthead h1 {
+    font-family: var(--serif); font-size: clamp(30px, 6vw, 44px);
+    margin: 0 0 10px; font-weight: 700; letter-spacing: -.01em;
+  }
+  header.masthead .dates { font-size: 13.5px; color: rgba(255,255,255,.8); }
+
+  main {
+    max-width: 780px; margin: -20px auto 0; padding: 0 20px 40px;
+  }
+  .card {
+    background: var(--panel); border-radius: 16px;
+    box-shadow: 0 12px 34px -20px rgba(20,24,60,.5);
+    padding: clamp(24px, 5vw, 44px);
+  }
+
+  .intro p { margin: 0 0 14px; color: var(--ink); }
+  .intro p:last-child { margin-bottom: 0; }
+
+  section { margin-top: 38px; }
+  section h2 {
+    font-size: 19px; color: var(--indigo); margin: 0 0 14px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  section h2 .num {
+    font-family: var(--serif); font-size: 15px; font-weight: 700;
+    color: var(--gold); flex-shrink: 0;
+  }
+  section h3 {
+    font-size: 15px; color: var(--ink); margin: 22px 0 8px; font-weight: 700;
+  }
+  p { margin: 0 0 14px; }
+  ul { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  a { color: var(--indigo-soft); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  strong { color: var(--ink); font-weight: 700; }
+  code {
+    background: rgba(26,35,126,0.08); border-radius: 5px; padding: 1px 6px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13.5px;
+    color: var(--indigo-soft);
+  }
+  @media (prefers-color-scheme: dark) { code { background: rgba(255,255,255,0.08); } }
+
+  .contact {
+    margin-top: 34px; background: rgba(26,35,126,0.05);
+    border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px;
+  }
+  @media (prefers-color-scheme: dark) { .contact { background: rgba(255,255,255,0.04); } }
+  .contact h2 { border: none; padding: 0; margin-bottom: 12px; }
+  .contact dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; }
+  .contact dt { color: var(--muted); font-size: 14px; }
+  .contact dd { margin: 0; font-size: 14px; }
+
+  footer {
+    max-width: 780px; margin: 28px auto 50px; padding: 0 24px;
+    text-align: center; color: var(--muted); font-size: 13px; line-height: 1.6;
+  }
+  footer .rule { height: 1px; background: var(--line); margin: 0 auto 20px; max-width: 120px; }
+</style>
 </head>
 <body>
-  <h1>Privacy Policy</h1>
-  <div class="section">
-    <p><strong>Effective Date:</strong> April 15, 2025</p>
-    <p>
-      Welcome to <strong>Apatani Biisi Kheta</strong> (the "App"), published by the Apatani Baptist Association, Ziro (“we”, “us”, or “our”). 
-      This Privacy Policy explains how we handle information when you use the App.
-    </p>
-    <p>
-      By using the App, you acknowledge and consent to the practices described in this Privacy Policy.
-    </p>
-  </div>
 
-  <div class="section">
-    <h2>Information We Collect</h2>
+  <header class="masthead">
+    <div class="eyebrow">Apatani Biisi Kheta</div>
+    <h1>Privacy Policy</h1>
+    <div class="dates">Effective 24 July 2026 · Last updated 24 July 2026</div>
+  </header>
 
-    <h3>1. Information Stored Locally on Your Device</h3>
-    <ul>
-      <li><strong>User Preferences:</strong> Theme, font size, font family, and the “Keep Screen Awake” setting.</li>
-      <li><strong>Favorite Songs:</strong> A list of song numbers you have marked as favorites.</li>
-    </ul>
-    <p>
-      This information is stored solely on your device within the App’s local storage (<code>shared_preferences</code>). We do not collect, access, or transmit this data. You can clear this data at any time by resetting the App's data via your device settings.
-    </p>
+  <main>
+    <div class="card">
 
-    <h3>2. Information Processed via Third-Party Services (Upon User Action)</h3>
-    <ul>
-      <li>
-        <strong>WhatsApp:</strong> When you initiate feedback or submit comments through WhatsApp, the <code>url_launcher</code> package is used to open WhatsApp and send your message to a dedicated number managed by the Apatani Baptist Association. Your use of WhatsApp is subject to <a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank">WhatsApp’s Privacy Policy</a>. We do not collect or store any data from these interactions.
-      </li>
-      <li>
-        <strong>Sharing:</strong> When you use the App’s Share feature, the <code>share_plus</code> package invokes your device’s native sharing interface. The data you share depends on the third-party app you select, which is governed by that app’s privacy policy (e.g., WhatsApp, Facebook, Instagram). We do not access or store any data from this process.
-      </li>
-    </ul>
+      <div class="intro">
+        <p><strong>Apatani Biisi Kheta</strong> (the “App”) is a hymnal and devotional
+        application published by the <strong>Apatani Baptist Association, Ziro</strong>
+        (Lower Subansiri District, Arunachal Pradesh, India) and developed by Thatea
+        Fanai under the BABFO ministry (“we”, “us”, or “our”). It is available as a mobile
+        app and as a web app.</p>
+        <p>We respect your privacy. The App does not require you to create an account or
+        provide any personal details to use it. This Policy explains what limited
+        information the App handles, how it is used, and the choices you have. By using the
+        App you agree to the practices described here.</p>
+      </div>
 
-    <h3>3. Technical & Usage Information (Processed by Firebase)</h3>
-    <p>
-      We use Google Firebase services to enhance performance and user experience:
-    </p>
-    <ul>
-      <li>
-        <strong>Firebase Crashlytics:</strong> Collects crash reports, device state, unique app instance identifiers, and stack traces to help us diagnose and fix bugs.
-      </li>
-      <li>
-        <strong>Firebase Analytics:</strong> Collects aggregated usage data (such as screens visited, session durations, and feature usage), device identifiers, approximate location, and device information.
-      </li>
-      <li>
-        <strong>Firebase Cloud Messaging (FCM):</strong> Collects device tokens and notification interaction data to enable push notifications. Notifications may include images hosted on Firebase Storage.
-      </li>
-    </ul>
-    <p>
-      Data collected by Firebase is governed by the <a href="https://policies.google.com/privacy" target="_blank">Google Privacy Policy</a> and <a href="https://firebase.google.com/support/privacy" target="_blank">Firebase-specific terms</a>.
-    </p>
-  </div>
+      <section>
+        <h2><span class="num">1</span> Information We Collect</h2>
 
-  <div class="section">
-    <h2>How We Use Information</h2>
-    <ul>
-      <li>Locally stored preferences and favorites are used solely for providing App functionality on your device.</li>
-      <li>Information processed by WhatsApp or sharing features is used only to facilitate those specific user-initiated actions.</li>
-      <li>Crashlytics data is used exclusively to diagnose and improve App stability.</li>
-      <li>Analytics data is used in aggregate or pseudonymous form to enhance App features and performance.</li>
-      <li>FCM data is used to deliver push notifications regarding new content or important updates.</li>
-    </ul>
-  </div>
+        <h3>a. Information stored only on your device</h3>
+        <ul>
+          <li><strong>Your preferences</strong> — theme (light/dark), font, font size, and the “keep screen awake” setting.</li>
+          <li><strong>Favorite songs</strong> — the list of song numbers you mark as favorites.</li>
+          <li><strong>Read status</strong> — which items in the Scripture archive you have already opened, so unread ones can be highlighted.</li>
+        </ul>
+        <p>This is saved locally on your device (via <code>shared_preferences</code>, and in
+        your browser’s local storage on the web version). We do not receive, access, or
+        transmit it. You can erase it any time by clearing the App’s data in your device or
+        browser settings.</p>
 
-  <div class="section">
-    <h2>Data Storage and Security</h2>
-    <ul>
-      <li>Preferences and favorites are stored locally on your device and are not transmitted to us.</li>
-      <li>Data collected by Firebase services is stored and processed by Google according to their established security practices.</li>
-    </ul>
-  </div>
+        <h3>b. Information processed only when you choose to act</h3>
+        <ul>
+          <li><strong>Feedback via WhatsApp</strong> — if you tap the feedback option, the App opens WhatsApp so you can message a number managed by the Apatani Baptist Association. Your use of WhatsApp is governed by <a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">WhatsApp’s Privacy Policy</a>.</li>
+          <li><strong>Sharing</strong> — if you share a song or scripture, your device’s native share sheet opens and passes the content to whichever app you choose; that app’s own privacy policy then applies.</li>
+        </ul>
+        <p>We do not collect or store anything from these interactions unless you
+        voluntarily send us a message.</p>
 
-  <div class="section">
-    <h2>Data Sharing</h2>
-    <ul>
-      <li>We do not sell or share your locally stored preferences or favorites with any third parties.</li>
-      <li>Data collected by Firebase is processed by Google as described in their privacy policies. We access only aggregated or anonymized reports as necessary for App improvement.</li>
-      <li>Interactions with third-party apps (such as WhatsApp) are governed by the respective third-party privacy policies.</li>
-      <li>Push notifications may include images hosted on Firebase Storage, but no personal data is shared in this process.</li>
-    </ul>
-  </div>
+        <h3>c. Technical and usage information (via Google Firebase)</h3>
+        <p>To keep the App reliable and to deliver content, we use Google Firebase services,
+        which process limited technical data:</p>
+        <ul>
+          <li><strong>Firebase Cloud Messaging (FCM)</strong> — a push-notification token for your app installation, so we can send “Scripture of the Day” and important announcements. Installations subscribe to a shared topic (<code>all_users_tkbk</code>); we send to that topic rather than to individuals.</li>
+          <li><strong>Firebase Analytics</strong> — aggregated, pseudonymous usage data such as screens viewed, session length, feature use, device model, and approximate (non-precise) location.</li>
+          <li><strong>Firebase Crashlytics</strong> — crash reports, device state, and diagnostic logs to help us find and fix problems.</li>
+        </ul>
 
-  <div class="section">
-    <h2>User Choices and Control</h2>
-    <ul>
-      <li>You may clear locally stored data at any time via your device’s system settings.</li>
-      <li>You can limit ad tracking or device identifiers through your device’s privacy settings.</li>
-      <li>You have the option to control push notifications via your device’s notification settings.</li>
-    </ul>
-  </div>
+        <h3>d. Content delivered to you</h3>
+        <ul>
+          <li><strong>Cloud Firestore</strong> — the App reads the shared “Scripture” archive (title, reference, verse text, and dates) from our database. This content is the same for everyone and is read-only for you; the App does not write any personal data about you to it.</li>
+          <li><strong>Firebase Storage</strong> — some scriptures include an image, which is delivered from our storage and shown in the notification and in the App.</li>
+        </ul>
+        <p>Information handled by these Google services is also governed by the
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a>
+        and <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Firebase terms</a>.</p>
+      </section>
 
-  <div class="section">
-    <h2>Children’s Privacy</h2>
-    <p>
-      The App is not directed to children under the age of 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us immediately so that we can take appropriate action.
-    </p>
-  </div>
+      <section>
+        <h2><span class="num">2</span> How We Use Information</h2>
+        <ul>
+          <li>Preferences, favorites, and read status are used only to run the App on your device.</li>
+          <li>Push tokens are used only to deliver notifications you can turn off at any time.</li>
+          <li>Analytics is used, in aggregate, to understand which features are helpful and to improve the App.</li>
+          <li>Crashlytics is used only to diagnose and fix stability problems.</li>
+          <li>We do <strong>not</strong> sell your information, and we do not use it for advertising.</li>
+        </ul>
+      </section>
 
-  <div class="section">
-    <h2>Changes to This Privacy Policy</h2>
-    <p>
-      We may update this Privacy Policy periodically to reflect changes in our practices or applicable laws. Updates will be posted on this page with a revised “Effective Date.” We encourage you to review this policy regularly.
-    </p>
-  </div>
+      <section>
+        <h2><span class="num">3</span> Push Notifications</h2>
+        <p>We use notifications to share the daily Scripture and occasional announcements.
+        A notification may contain a title, a verse or message, and an optional image.
+        Tapping it opens the item inside the App. You can turn notifications off at any time
+        in your device (or browser) notification settings; the App continues to work
+        without them, and past scriptures remain available in the in-app Scripture archive.</p>
+      </section>
 
-  <div class="section contact">
-    <h2>Contact Us</h2>
-    <p>
-      If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:<br>
-      <strong>Email:</strong> <a href="mailto:thateafanai@babfo.org">thateafanai@babfo.org</a>
-    </p>
-  </div>
+      <section>
+        <h2><span class="num">4</span> Data Storage and Security</h2>
+        <ul>
+          <li>Your preferences, favorites, and read status stay on your device and are not sent to us.</li>
+          <li>Technical data handled by Firebase is stored and protected by Google under their security practices.</li>
+          <li>Because the App requires no account, there are no passwords or personal profiles for us to hold.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span class="num">5</span> How Information Is Shared</h2>
+        <ul>
+          <li>We do not sell or rent your information to anyone.</li>
+          <li>Technical data is processed by Google (Firebase) as our service provider, as described in their policies.</li>
+          <li>When you choose to use WhatsApp or the share feature, the content goes to that third-party app under its own policy.</li>
+          <li>We may disclose information if required by law or to protect the rights and safety of our users.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span class="num">6</span> Your Choices and Controls</h2>
+        <ul>
+          <li>Clear locally stored data any time via your device or browser settings.</li>
+          <li>Turn notifications on or off in your device/browser notification settings.</li>
+          <li>Limit analytics/advertising identifiers through your device’s privacy settings.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span class="num">7</span> Children’s Privacy</h2>
+        <p>The App is intended for a general audience and is not directed at children under
+        13. We do not knowingly collect personal information from children. If you believe a
+        child has provided us personal information, please contact us so we can remove it.</p>
+      </section>
+
+      <section>
+        <h2><span class="num">8</span> Data Retention</h2>
+        <p>Locally stored data remains until you delete it. Technical data processed by
+        Firebase is retained according to Google’s retention periods for those services. We
+        do not maintain separate personal records about individual users.</p>
+      </section>
+
+      <section>
+        <h2><span class="num">9</span> International Data Transfers</h2>
+        <p>Google/Firebase may process technical data on servers located outside your
+        country. By using the App you understand that such data may be transferred to, and
+        processed in, countries with different data-protection laws, subject to Google’s
+        safeguards.</p>
+      </section>
+
+      <section>
+        <h2><span class="num">10</span> Changes to This Policy</h2>
+        <p>We may update this Policy from time to time to reflect changes to the App or the
+        law. Updates will be posted on this page with a revised “Last updated” date. Please
+        review it periodically.</p>
+      </section>
+
+      <div class="contact">
+        <h2>Contact Us</h2>
+        <p style="margin-bottom:14px">Questions about this Policy or your privacy? We’re glad to help.</p>
+        <dl>
+          <dt>Publisher</dt><dd>Apatani Baptist Association, Ziro</dd>
+          <dt>Location</dt><dd>Lower Subansiri District, Arunachal Pradesh, India</dd>
+          <dt>Developer</dt><dd>Thatea Fanai (BABFO ministry)</dd>
+          <dt>Email</dt><dd><a href="mailto:support@babfo.org">support@babfo.org</a></dd>
+          <dt>Website</dt><dd><a href="https://babfo.org" target="_blank" rel="noopener">babfo.org</a></dd>
+        </dl>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="rule"></div>
+    <p>Apatani Biisi Kheta — published by the Apatani Baptist Association, Ziro.<br>
+    © 2026 BABFO. All rights reserved.</p>
+  </footer>
+
 </body>
 </html>
