@@ -47,3 +47,6 @@ app.*.map.json
 # Built app bundles/APKs shouldn't be committed to source control
 *.aab
 *.apk
+
+# Firebase deploy cache
+.firebase/
