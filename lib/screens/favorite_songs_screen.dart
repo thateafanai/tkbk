@@ -81,25 +81,28 @@ class FavoriteSongsScreen extends StatelessWidget {
 
                return Scaffold(
                   appBar: const CustomHeader(title: 'Favorite Songs', showBackButton: true),
-                  body: favoriteSongs.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No favorite songs marked yet.',
-                            style: TextStyle(fontSize: 16 * fontSizeFactor, color: Colors.grey[600]),
+                  body: SafeArea(
+                    top: false,
+                    child: favoriteSongs.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No favorite songs marked yet.',
+                              style: TextStyle(fontSize: 16 * fontSizeFactor, color: Colors.grey[600]),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                            itemCount: favoriteSongs.length,
+                            itemBuilder: (BuildContext context, int index) {
+                          // Instantiate the SongListItem widget class
+                          return SongListItem(
+                            key: ValueKey(favoriteSongs[index].number), // Add key
+                            song: favoriteSongs[index],
+                            fontSizeFactor: fontSizeFactor,
+                          );
+                        },
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                          itemCount: favoriteSongs.length,
-                          itemBuilder: (BuildContext context, int index) {
-                        // Instantiate the SongListItem widget class
-                        return SongListItem(
-                          key: ValueKey(favoriteSongs[index].number), // Add key
-                          song: favoriteSongs[index],
-                          fontSizeFactor: fontSizeFactor,
-                        );
-                      },
-                        ),
+                  ),
                 );
              }
          );

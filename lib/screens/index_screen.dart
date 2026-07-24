@@ -33,23 +33,26 @@ class IndexScreen extends StatelessWidget {
 
            return Scaffold(
              appBar: const CustomHeader(title: 'Index (Alphabetical)', showBackButton: true),
-             body: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                // Use the length of the sorted list
-                itemCount: sortedSongs.length,
-                itemBuilder: (BuildContext context, int index) {
-                  // Get the song from the CORRECT list variable: sortedSongs
-                  final Song currentSong = sortedSongs[index];
+             body: SafeArea(
+               top: false,
+               child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  // Use the length of the sorted list
+                  itemCount: sortedSongs.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    // Get the song from the CORRECT list variable: sortedSongs
+                    final Song currentSong = sortedSongs[index];
 
-                  // Instantiate the SongListItem widget class using the correct song object
-                  return SongListItem(
-                    // Use key based on the song from the correct list
-                    key: ValueKey(currentSong.number),
-                    // Pass the song from the correct list
-                    song: currentSong,
-                    fontSizeFactor: fontSizeFactor,
-                  );
-                },
+                    // Instantiate the SongListItem widget class using the correct song object
+                    return SongListItem(
+                      // Use key based on the song from the correct list
+                      key: ValueKey(currentSong.number),
+                      // Pass the song from the correct list
+                      song: currentSong,
+                      fontSizeFactor: fontSizeFactor,
+                    );
+                  },
+               ),
              ),
            );
         }
