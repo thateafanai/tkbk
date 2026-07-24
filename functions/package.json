@@ -1,0 +1,17 @@
+{
+  "name": "tkbk-functions",
+  "description": "Cloud Functions for Apatani Biisi Kheta — scheduled & on-demand Scripture push.",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "scripts": {
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.1"
+  }
+}
