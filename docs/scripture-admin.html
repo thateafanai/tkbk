@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apatani Biisi Kheta — Scripture Admin</title>
+<style>
+  :root {
+    --indigo: #1A237E; --indigo-soft: #3B45A8; --gold: #9C7724;
+    --bg: #EAECF4; --panel: #FFFFFF; --ink: #23263A; --muted: #6B7188;
+    --line: rgba(28,32,68,0.12);
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --serif: Georgia, "Times New Roman", serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--ink); font-size: 14px; }
+
+  #login { max-width: 380px; margin: 60px auto; background: var(--panel); border-radius: 18px; padding: 40px; box-shadow: 0 8px 32px rgba(0,0,0,.12); text-align: center; }
+  #login .logo { font-size: 46px; margin-bottom: 10px; }
+  #login h1 { font-size: 21px; margin-bottom: 4px; }
+  #login p { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .err { color: #c62828; font-size: 12.5px; margin-top: 8px; min-height: 16px; }
+
+  label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--ink); margin: 14px 0 5px; text-align: left; }
+  input[type=text], input[type=email], input[type=password], input[type=url], input[type=date], textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 9px;
+    font-size: 14px; background: #fafcff; font-family: var(--sans); color: var(--ink);
+  }
+  textarea { font-family: var(--serif); line-height: 1.5; min-height: 110px; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--indigo-soft); border-color: transparent; }
+
+  .btn { border: none; border-radius: 10px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--sans); }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn-navy { background: var(--indigo); color: #fff; }
+  .btn-gold { background: var(--gold); color: #fff; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--indigo); color: var(--indigo); }
+  .btn-red { background: #e53935; color: #fff; }
+  .btn-sm { padding: 7px 12px; font-size: 12.5px; }
+
+  #app { display: none; }
+  .top { background: var(--indigo); color: #fff; padding: 16px 22px; display: flex; align-items: center; gap: 12px; }
+  .top .dot { font-size: 22px; }
+  .top h1 { font-size: 17px; font-weight: 700; flex: 1; }
+  .top .user { font-size: 12px; opacity: .8; }
+
+  .layout { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 1080px; margin: 0 auto; padding: 24px 22px 60px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+  .card { background: var(--panel); border-radius: 15px; padding: 20px; box-shadow: 0 8px 26px -18px rgba(20,24,60,.5); }
+  .card h2 { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 5px; }
+  .status { font-size: 13px; margin-left: 12px; }
+  .status.ok { color: #1c7a43; } .status.err { color: #b3261e; }
+  .actions { margin-top: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .note { font-size: 12.5px; color: var(--muted); background: #eef1f8; border-radius: 10px; padding: 10px 12px; margin-top: 4px; line-height: 1.5; }
+
+  .item { border: 1.5px solid var(--line); border-radius: 12px; padding: 14px; margin-top: 10px; display: flex; gap: 12px; align-items: flex-start; }
+  .item.sched { border-color: #ffd9a0; background: #fffdf7; }
+  .item.sent  { border-color: #a5d6a7; background: #f4fbf4; }
+  .item .ref { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
+  .item .txt { font-family: var(--serif); font-size: 14px; margin-top: 4px; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .item .meta { font-size: 11px; color: var(--muted); margin-top: 6px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .chip { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .chip-grey { background: #eceff5; color: #5a6072; }
+  .chip-orange { background: #fff2df; color: #b5651d; }
+  .chip-green { background: #e6f4e9; color: #2e7d32; }
+  .item .thumb { width: 54px; height: 54px; border-radius: 9px; object-fit: cover; flex-shrink: 0; }
+  .item-body { flex: 1; min-width: 0; }
+  .item-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+
+  .pv-wrap { position: sticky; top: 24px; }
+  .plabel { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 10px; }
+  .phone { background: #060710; border-radius: 40px; padding: 9px; box-shadow: 0 30px 60px -26px rgba(20,24,60,.55); }
+  .screen { background: #EDEFF6; border-radius: 32px; overflow: hidden; min-height: 440px; }
+  .appbar { background: var(--indigo); color: #fff; padding: 36px 14px 14px; text-align: center; border-radius: 0 0 20px 20px; font-weight: 700; font-size: 15px; }
+  .detail { padding: 22px 20px 26px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .d-eyebrow { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; color: var(--gold); }
+  .d-ref { font-family: var(--serif); font-size: 22px; font-weight: 700; margin-top: 12px; }
+  .orn { width: 52%; height: 1px; margin: 14px 0 16px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: .6; }
+  .d-verse { font-family: var(--serif); font-size: 18px; line-height: 1.6; max-width: 30ch; white-space: pre-wrap; }
+  .d-img { margin-top: 18px; width: 100%; border-radius: 14px; display: block; }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login">
+  <div class="logo">📖</div>
+  <h1>Scripture Admin</h1>
+  <p>Apatani Biisi Kheta</p>
+  <label for="email">Email</label>
+  <input type="email" id="email" value="fpthatea@gmail.com" autocomplete="username">
+  <label for="password">Password</label>
+  <input type="password" id="password" autocomplete="current-password">
+  <div class="err" id="loginErr"></div>
+  <button class="btn btn-navy" id="signInBtn" style="width:100%; margin-top:16px">Sign In</button>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="top">
+    <span class="dot">📖</span>
+    <h1>Scripture Admin</h1>
+    <span class="user" id="userEmail"></span>
+    <button class="btn btn-outline btn-sm" id="signOutBtn">Sign Out</button>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <h2 id="formHeading">New scripture</h2>
+        <div class="note">
+          <b>Leave the date empty</b> → saved to the archive, visible in the app now, no notification.<br>
+          <b>Pick a date</b> → it's sent automatically as a push that morning (6 AM). Prepare a whole week or month ahead.<br>
+          Or use <b>Send now</b> on any item below to push it immediately.
+        </div>
+
+        <label>Title</label>
+        <input type="text" id="title" value="Scripture of the Day" autocomplete="off">
+
+        <label>Reference <span style="font-weight:400;text-transform:none;color:var(--muted)">— optional, e.g. John 3:16</span></label>
+        <input type="text" id="reference" placeholder="John 3:16" autocomplete="off">
+
+        <label>Message / Verse</label>
+        <textarea id="verse" placeholder="For God so loved the world…"></textarea>
+
+        <label>Schedule for <span style="font-weight:400;text-transform:none;color:var(--muted)">— optional; auto-sends that morning</span></label>
+        <input type="date" id="scheduleDate">
+
+        <label>Image <span style="font-weight:400;text-transform:none;color:var(--muted)">— optional; upload a file or paste a link</span></label>
+        <div class="file-row">
+          <input type="file" id="imageFile" accept="image/*">
+          <span style="color:var(--muted)">or</span>
+          <input type="url" id="imageUrl" placeholder="https://…" style="flex:1; min-width:160px" autocomplete="off">
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-navy" id="saveBtn">Save</button>
+          <button class="btn btn-outline btn-sm" id="clearBtn" style="display:none">Cancel edit</button>
+          <span class="status" id="status"></span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h2>Archive &amp; schedule <span id="countBadge" style="color:var(--muted)"></span></h2>
+        <div id="list"><p style="color:var(--muted); margin-top:10px">Loading…</p></div>
+      </div>
+    </div>
+
+    <div class="pv-wrap">
+      <p class="plabel">Live preview</p>
+      <div class="phone"><div class="screen">
+        <div class="appbar" id="pvTitle">Scripture of the Day</div>
+        <div class="detail">
+          <div class="d-eyebrow" id="pvEyebrow">Scripture of the Day</div>
+          <div class="d-ref" id="pvRef" style="display:none"></div>
+          <div class="orn"></div>
+          <p class="d-verse" id="pvVerse">Your message will appear here.</p>
+          <img class="d-img" id="pvImg" style="display:none" alt="">
+        </div>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs,
+         query, orderBy, limit, serverTimestamp, Timestamp, deleteField }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+import { getFunctions, httpsCallable }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+
+const app = initializeApp({
+  apiKey: 'AIzaSyBHmRgL1f-c3Wj7ezoS5QPvkv4SZZ1RlyE',
+  authDomain: 'apatani-biisi-kheta.firebaseapp.com',
+  projectId: 'apatani-biisi-kheta',
+  storageBucket: 'apatani-biisi-kheta.firebasestorage.app',
+  messagingSenderId: '371710579657',
+  appId: '1:371710579657:web:50dc0cb8b34ad3ac4f4e18',
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const functions = getFunctions(app, 'us-central1');
+const sendNowFn = httpsCallable(functions, 'sendScriptureNow');
+
+const ADMIN_EMAIL = 'fpthatea@gmail.com';
+const $ = (id) => document.getElementById(id);
+let editingId = null;
+
+// ---- Auth ----
+$('signInBtn').onclick = async () => {
+  $('loginErr').textContent = '';
+  $('signInBtn').disabled = true; $('signInBtn').textContent = 'Signing in…';
+  try {
+    await signInWithEmailAndPassword(auth, $('email').value.trim(), $('password').value);
+  } catch (e) { $('loginErr').textContent = e.message; }
+  $('signInBtn').disabled = false; $('signInBtn').textContent = 'Sign In';
+};
+$('password').onkeydown = (e) => { if (e.key === 'Enter') $('signInBtn').click(); };
+$('signOutBtn').onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async (user) => {
+  if (user && user.email === ADMIN_EMAIL) {
+    $('login').style.display = 'none'; $('app').style.display = 'block';
+    $('userEmail').textContent = user.email;
+    await loadList();
+  } else if (user) {
+    await signOut(auth);
+    $('loginErr').textContent = 'Access denied — admin only.';
+    $('login').style.display = 'block'; $('app').style.display = 'none';
+  } else {
+    $('login').style.display = 'block'; $('app').style.display = 'none';
+  }
+});
+
+// ---- Preview ----
+function refreshPreview() {
+  const title = $('title').value.trim() || 'Scripture of the Day';
+  $('pvTitle').textContent = title;
+  $('pvEyebrow').textContent = title.toUpperCase();
+  const ref = $('reference').value.trim();
+  const refBox = $('pvRef');
+  if (ref) { refBox.textContent = ref; refBox.style.display = 'block'; } else { refBox.style.display = 'none'; }
+  $('pvVerse').textContent = $('verse').value.trim() || 'Your message will appear here.';
+  const img = $('pvImg');
+  if ($('imageFile').files[0]) { img.src = URL.createObjectURL($('imageFile').files[0]); img.style.display = 'block'; }
+  else if ($('imageUrl').value.trim()) { img.src = $('imageUrl').value.trim(); img.style.display = 'block'; }
+  else { img.style.display = 'none'; }
+}
+['title','reference','verse','imageUrl'].forEach(id => $(id).addEventListener('input', refreshPreview));
+$('imageFile').addEventListener('change', refreshPreview);
+refreshPreview();
+
+// ---- Save ----
+$('saveBtn').onclick = async () => {
+  const title = $('title').value.trim() || 'Scripture of the Day';
+  const reference = $('reference').value.trim();
+  const verse = $('verse').value.trim();
+  if (!verse) { setStatus('Add the verse text first.', 'err'); return; }
+
+  $('saveBtn').disabled = true;
+  setStatus(editingId ? 'Updating…' : 'Saving…', '');
+  try {
+    let imageUrl = $('imageUrl').value.trim();
+    if ($('imageFile').files[0]) {
+      setStatus('Uploading image…', '');
+      imageUrl = await uploadImage($('imageFile').files[0]);
+    }
+
+    // Scheduling → visibleFrom controls when the app shows it.
+    const dateStr = $('scheduleDate').value;
+    let scheduledFor = null;
+    let visibleFrom;
+    if (dateStr) {
+      scheduledFor = Timestamp.fromDate(new Date(dateStr + 'T00:00:00'));
+      visibleFrom = scheduledFor;
+    } else {
+      visibleFrom = serverTimestamp();
+    }
+
+    if (editingId) {
+      await updateDoc(doc(db, 'scriptures', editingId), {
+        title, reference, verse, imageUrl: imageUrl || null,
+        visibleFrom,
+        scheduledFor: scheduledFor ? scheduledFor : deleteField(),
+      });
+      setStatus('✓ Updated.', 'ok');
+    } else {
+      const data = {
+        title, reference, verse, imageUrl: imageUrl || null,
+        createdAt: serverTimestamp(), source: 'admin', sent: false, visibleFrom,
+      };
+      if (scheduledFor) data.scheduledFor = scheduledFor;
+      await addDoc(collection(db, 'scriptures'), data);
+      setStatus(scheduledFor ? '✓ Scheduled.' : '✓ Added to archive.', 'ok');
+    }
+    clearForm();
+    await loadList();
+  } catch (e) {
+    setStatus('✗ ' + e.message, 'err');
+  }
+  $('saveBtn').disabled = false;
+};
+
+async function uploadImage(file) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const path = `scripture_images/${Date.now()}.${ext || 'jpg'}`;
+  const snap = await uploadBytes(sRef(storage, path), file, { contentType: file.type });
+  return await getDownloadURL(snap.ref);
+}
+
+$('clearBtn').onclick = clearForm;
+function clearForm() {
+  editingId = null;
+  $('title').value = 'Scripture of the Day';
+  $('reference').value = ''; $('verse').value = '';
+  $('scheduleDate').value = '';
+  $('imageUrl').value = ''; $('imageFile').value = '';
+  $('formHeading').textContent = 'New scripture';
+  $('clearBtn').style.display = 'none';
+  refreshPreview();
+}
+
+// ---- List ----
+async function loadList() {
+  const listEl = $('list');
+  try {
+    const snap = await getDocs(query(collection(db, 'scriptures'), orderBy('createdAt', 'desc'), limit(100)));
+    $('countBadge').textContent = snap.size ? `(${snap.size})` : '';
+    if (snap.empty) { listEl.innerHTML = '<p style="color:var(--muted); margin-top:10px">Nothing yet.</p>'; return; }
+    listEl.innerHTML = '';
+    const now = Date.now();
+    snap.forEach(d => {
+      const v = d.data();
+      const scheduled = v.scheduledFor?.toDate ? v.scheduledFor.toDate() : null;
+      const future = scheduled && scheduled.getTime() > now;
+
+      let chip;
+      if (v.sent) chip = '<span class="chip chip-green">✓ Sent</span>';
+      else if (future) chip = `<span class="chip chip-orange">⏰ ${scheduled.toLocaleDateString()}</span>`;
+      else chip = '<span class="chip chip-grey">In archive</span>';
+
+      const el = document.createElement('div');
+      el.className = 'item' + (v.sent ? ' sent' : (future ? ' sched' : ''));
+      el.innerHTML = `
+        ${v.imageUrl ? `<img class="thumb" src="${esc(v.imageUrl)}" alt="">` : ''}
+        <div class="item-body">
+          ${v.reference ? `<div class="ref">${esc(v.reference)}</div>` : ''}
+          <div class="txt">${esc(v.verse || '')}</div>
+          <div class="meta">${chip}</div>
+        </div>
+        <div class="item-actions">
+          ${v.sent ? '' : `<button class="btn btn-gold btn-sm" data-send="${d.id}">Send now</button>`}
+          <button class="btn btn-outline btn-sm" data-edit="${d.id}">Edit</button>
+          <button class="btn btn-red btn-sm" data-del="${d.id}">Delete</button>
+        </div>`;
+      const sendBtn = el.querySelector('[data-send]');
+      if (sendBtn) sendBtn.onclick = () => sendNow(d.id);
+      el.querySelector('[data-edit]').onclick = () => startEdit(d.id, v);
+      el.querySelector('[data-del]').onclick = () => remove(d.id);
+      listEl.appendChild(el);
+    });
+  } catch (e) {
+    listEl.innerHTML = `<p style="color:#b3261e; margin-top:10px">Error: ${esc(e.message)}</p>`;
+  }
+}
+
+async function sendNow(id) {
+  if (!confirm('Send this scripture as a push notification to everyone right now?')) return;
+  setStatus('Sending push…', '');
+  try {
+    await sendNowFn({ scriptureId: id });
+    setStatus('✓ Push sent to everyone.', 'ok');
+    await loadList();
+  } catch (e) {
+    setStatus('✗ ' + (e.message || 'Send failed.'), 'err');
+  }
+}
+
+function startEdit(id, v) {
+  editingId = id;
+  $('title').value = v.title || 'Scripture of the Day';
+  $('reference').value = v.reference || '';
+  $('verse').value = v.verse || '';
+  $('imageUrl').value = v.imageUrl || '';
+  $('imageFile').value = '';
+  $('scheduleDate').value = v.scheduledFor?.toDate ? toDateInput(v.scheduledFor.toDate()) : '';
+  $('formHeading').textContent = 'Edit scripture';
+  $('clearBtn').style.display = 'inline-block';
+  refreshPreview();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function remove(id) {
+  if (!confirm('Delete this scripture? Everyone will lose it from their archive.')) return;
+  try { await deleteDoc(doc(db, 'scriptures', id)); await loadList(); }
+  catch (e) { setStatus('✗ ' + e.message, 'err'); }
+}
+
+function toDateInput(d) {
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function setStatus(msg, type) { const s = $('status'); s.textContent = msg; s.className = 'status ' + type; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
