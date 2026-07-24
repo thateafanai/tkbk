@@ -76,17 +76,20 @@ class AllSongsScreen extends StatelessWidget {
           final double fontSizeFactor = settingsState.fontSizeFactor;
           return Scaffold(
              appBar: const CustomHeader(title: 'All Songs', showBackButton: true),
-             body: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                itemCount: songs.length,
-                itemBuilder: (BuildContext context, int index) {
-          // Instantiate the SongListItem widget class
-          return SongListItem(
-              key: ValueKey(songs[index].number), // Add key for performance
-              song: songs[index],
-              fontSizeFactor: fontSizeFactor,
-          );
-        },
+             body: SafeArea(
+               top: false,
+               child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  itemCount: songs.length,
+                  itemBuilder: (BuildContext context, int index) {
+            // Instantiate the SongListItem widget class
+            return SongListItem(
+                key: ValueKey(songs[index].number), // Add key for performance
+                song: songs[index],
+                fontSizeFactor: fontSizeFactor,
+            );
+          },
+               ),
              ),
            );
          }

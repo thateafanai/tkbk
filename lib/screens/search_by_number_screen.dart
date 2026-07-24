@@ -49,9 +49,10 @@ class SearchByNumberScreen extends StatelessWidget {
         title: 'Search By Number',
         showBackButton: true, // Make sure back button is enabled
       ),
-      body: GridView.builder(
-          // Padding includes extra space at the bottom now
-          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 32.0),
+      body: SafeArea(
+        top: false,
+        child: GridView.builder(
+          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
           itemCount: totalSongs,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 4,
@@ -99,6 +100,7 @@ class SearchByNumberScreen extends StatelessWidget {
             );
           },
         ),
+      ),
     );
   }
 }
