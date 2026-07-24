@@ -1,0 +1,6 @@
+node_modules/
+
+# Firebase Admin service account keys — SECRET, never commit.
+service-account.json
+*firebase-adminsdk*.json
+*serviceAccount*.json

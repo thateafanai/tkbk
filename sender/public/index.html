@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apatani Biisi Kheta — Send a message</title>
+<style>
+  :root {
+    --indigo: #1A237E;
+    --indigo-soft: #3B45A8;
+    --gold: #9C7724;
+    --bg: #EAECF4;
+    --panel: #FFFFFF;
+    --ink: #23263A;
+    --muted: #6B7188;
+    --line: rgba(28,32,68,0.12);
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --serif: Georgia, "Times New Roman", serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  .top { background: var(--indigo); color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 12px; }
+  .top .dot { font-size: 22px; }
+  .top h1 { font-size: 17px; margin: 0; font-weight: 700; letter-spacing: 0.01em; }
+  .top .topic { margin-left: auto; font-size: 12px; opacity: 0.75; }
+
+  .layout { display: grid; grid-template-columns: 1fr 400px; gap: 28px; max-width: 1080px; margin: 0 auto; padding: 28px 24px 60px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+  .card { background: var(--panel); border-radius: 16px; padding: 22px; box-shadow: 0 10px 30px -18px rgba(20,24,60,0.45); }
+  h2 { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0 0 16px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 16px 0 6px; }
+  label:first-of-type { margin-top: 0; }
+  .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+  input[type=text], textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px;
+    font-family: var(--sans); font-size: 14.5px; color: var(--ink); background: #fbfbfe;
+  }
+  input[type=text]:focus, textarea:focus { outline: 2px solid var(--indigo-soft); border-color: transparent; }
+  textarea { min-height: 120px; resize: vertical; font-family: var(--serif); line-height: 1.5; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  input[type=file] { font-size: 13px; }
+  details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+  summary { cursor: pointer; font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  .actions { margin-top: 22px; display: flex; align-items: center; gap: 14px; }
+  button.send {
+    background: var(--indigo); color: #fff; border: none; border-radius: 11px;
+    padding: 13px 26px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--sans);
+  }
+  button.send:disabled { opacity: 0.55; cursor: default; }
+  .status { font-size: 13.5px; }
+  .status.ok { color: #1c7a43; }
+  .status.err { color: #b3261e; }
+
+  /* ---- Preview phone ---- */
+  .preview-wrap { position: sticky; top: 28px; }
+  .plabel { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; text-align: center; }
+  .phone { background: #060710; border-radius: 42px; padding: 10px; box-shadow: 0 30px 60px -24px rgba(20,24,60,0.55); }
+  .screen { background: #EDEFF6; border-radius: 33px; overflow: hidden; min-height: 500px; }
+  .appbar { background: var(--indigo); color: #fff; padding: 40px 16px 16px; text-align: center; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; font-weight: 700; font-size: 16px; }
+  .detail { padding: 24px 22px 28px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .d-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700; color: var(--gold); }
+  .d-date { font-size: 12px; color: var(--muted); margin-top: 7px; }
+  .d-ref { font-family: var(--serif); font-size: 24px; font-weight: 700; margin: 14px 0 0; }
+  .orn { width: 54%; height: 1px; margin: 15px 0 18px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0.6; }
+  .d-verse { font-family: var(--serif); font-size: 19px; line-height: 1.6; margin: 0; max-width: 30ch; white-space: pre-wrap; }
+  .d-img { margin-top: 20px; width: 100%; border-radius: 16px; display: block; }
+  .d-share { margin-top: 22px; background: var(--indigo); color: #fff; border-radius: 11px; padding: 11px 0; width: 100%; font-weight: 700; font-size: 13.5px; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <span class="dot">📖</span>
+    <h1>Apatani Biisi Kheta — Send a message</h1>
+    <span class="topic">→ all installed apps</span>
+  </div>
+
+  <div class="layout">
+    <form class="card" id="form">
+      <h2>Compose</h2>
+
+      <label>Title <span class="hint">— the heading of the notification</span></label>
+      <input type="text" id="title" name="title" value="Scripture of the Day" autocomplete="off">
+
+      <label>Reference <span class="hint">— optional, e.g. John 3:16</span></label>
+      <input type="text" id="reference" name="reference" placeholder="John 3:16" autocomplete="off">
+
+      <label>Message / Verse</label>
+      <textarea id="verse" name="verse" placeholder="For God so loved the world…"></textarea>
+
+      <label>Image <span class="hint">— optional; upload a file or paste a link</span></label>
+      <div class="file-row">
+        <input type="file" id="imageFile" accept="image/*">
+        <span class="hint">or</span>
+        <input type="text" id="imageUrl" name="imageUrl" placeholder="https://…" style="flex:1; min-width:180px;" autocomplete="off">
+      </div>
+
+      <details>
+        <summary>Advanced</summary>
+        <label>Link to a song number <span class="hint">— optional; tapping opens that song</span></label>
+        <input type="text" id="songNumber" name="songNumber" placeholder="e.g. 42" autocomplete="off">
+      </details>
+
+      <div class="actions">
+        <button type="submit" class="send" id="sendBtn">Send to everyone</button>
+        <span class="status" id="status"></span>
+      </div>
+    </form>
+
+    <div class="preview-wrap">
+      <p class="plabel">Live preview — how it looks in the app</p>
+      <div class="phone">
+        <div class="screen">
+          <div class="appbar" id="pv-title">Scripture of the Day</div>
+          <div class="detail">
+            <div class="d-eyebrow" id="pv-eyebrow">Scripture of the Day</div>
+            <div class="d-date" id="pv-date">Today</div>
+            <div class="d-ref" id="pv-ref" style="display:none"></div>
+            <div class="orn"></div>
+            <p class="d-verse" id="pv-verse">Your message will appear here.</p>
+            <img class="d-img" id="pv-img" style="display:none" alt="">
+            <div class="d-share">Share</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const titleEl = $('title'), refEl = $('reference'), verseEl = $('verse');
+  const fileEl = $('imageFile'), urlEl = $('imageUrl');
+
+  $('pv-date').textContent = new Date().toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  function refreshPreview() {
+    const title = titleEl.value.trim() || 'Scripture of the Day';
+    $('pv-title').textContent = title;
+    $('pv-eyebrow').textContent = title.toUpperCase();
+
+    const ref = refEl.value.trim();
+    const refBox = $('pv-ref');
+    if (ref) { refBox.textContent = ref; refBox.style.display = 'block'; }
+    else { refBox.style.display = 'none'; }
+
+    $('pv-verse').textContent = verseEl.value.trim() || 'Your message will appear here.';
+
+    const img = $('pv-img');
+    if (fileEl.files && fileEl.files[0]) {
+      img.src = URL.createObjectURL(fileEl.files[0]); img.style.display = 'block';
+    } else if (urlEl.value.trim()) {
+      img.src = urlEl.value.trim(); img.style.display = 'block';
+    } else {
+      img.style.display = 'none';
+    }
+  }
+  ['input','change'].forEach(ev => $('form').addEventListener(ev, refreshPreview));
+  refreshPreview();
+
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('sendBtn'), status = $('status');
+    btn.disabled = true; status.className = 'status'; status.textContent = 'Sending…';
+
+    const fd = new FormData();
+    fd.append('title', titleEl.value);
+    fd.append('reference', refEl.value);
+    fd.append('verse', verseEl.value);
+    fd.append('songNumber', $('songNumber').value);
+    if (fileEl.files && fileEl.files[0]) fd.append('image', fileEl.files[0]);
+    else fd.append('imageUrl', urlEl.value);
+
+    try {
+      const r = await fetch('/send', { method: 'POST', body: fd });
+      const j = await r.json();
+      if (j.ok) {
+        status.className = 'status ok';
+        status.textContent = '✓ Sent to everyone.';
+      } else {
+        status.className = 'status err';
+        status.textContent = '✗ ' + (j.error || 'Failed to send.');
+      }
+    } catch (err) {
+      status.className = 'status err';
+      status.textContent = '✗ ' + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
