@@ -22,14 +22,16 @@ firebase deploy --only hosting
 
 After the first deploy your app is live at:
 
-- **https://apatani-biisi-kheta.web.app**
-- **https://apatani-biisi-kheta.firebaseapp.com**
+- **https://tkbk.babfo.org** ← the primary link to share
+- https://apatani-biisi-kheta.web.app
+- https://apatani-biisi-kheta.firebaseapp.com
 
-Share that link with iPhone (and any) users. Re-run the two build/deploy commands
-whenever you change the app and want the web version updated.
+Share **tkbk.babfo.org** with iPhone (and any) users. Re-run the two build/deploy
+commands whenever you change the app and want the web version updated.
 
-> A custom domain (e.g. `app.babfo.org`) can be added later in Firebase Console →
-> Hosting → Add custom domain, if you want.
+> The `tkbk.babfo.org` custom domain was added in Firebase Console → Hosting →
+> Add custom domain (DNS records added at babfo.org's provider). All three URLs
+> serve the same app.
 
 ---
 
