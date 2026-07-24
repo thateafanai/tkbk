@@ -18,7 +18,7 @@ class ScriptureInboxScreen extends StatelessWidget {
     return Scaffold(
       appBar: CustomHeader(
         title: 'Scripture',
-        showBackButton: true,
+        showBackButton: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.done_all, color: Colors.white),

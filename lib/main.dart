@@ -13,6 +13,7 @@ import 'firebase_options.dart'; // Ensure this file exists and is configured
 
 // Your App Imports
 import 'screens/home_screen.dart';
+import 'screens/scripture_inbox_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/message_store.dart';
 import 'services/notification_service.dart';
@@ -129,8 +130,8 @@ class MyApp extends StatelessWidget {
               home: const MainScreen(),
               debugShowCheckedModeBanner: false,
               routes: {
-                '/home': (context) => const MainScreen(initialIndex: 0),
-                '/settings': (context) => const MainScreen(initialIndex: 1),
+                '/home': (context) => const MainScreen(initialIndex: 1),
+                '/settings': (context) => const MainScreen(initialIndex: 2),
               },
             );
           },
@@ -143,13 +144,14 @@ class MyApp extends StatelessWidget {
 // --- MainScreen Widget and State (Includes RouteAware for Analytics) ---
 class MainScreen extends StatefulWidget {
   final int initialIndex;
-  const MainScreen({super.key, this.initialIndex = 0});
+  // Tab order: 0 = Scripture, 1 = Home (default), 2 = Settings.
+  const MainScreen({super.key, this.initialIndex = 1});
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> with RouteAware { // Added RouteAware
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
 
   @override
   void initState() {
@@ -197,8 +199,9 @@ class _MainScreenState extends State<MainScreen> with RouteAware { // Added Rout
      }
      String screenName;
      switch (index) {
-        case 0: screenName = 'HomeScreen'; break;
-        case 1: screenName = 'SettingsScreen'; break;
+        case 0: screenName = 'ScriptureScreen'; break;
+        case 1: screenName = 'HomeScreen'; break;
+        case 2: screenName = 'SettingsScreen'; break;
         default: screenName = 'UnknownScreen_Index$index';
      }
      analytics.logScreenView( screenName: screenName, screenClass: screenName );
@@ -207,8 +210,9 @@ class _MainScreenState extends State<MainScreen> with RouteAware { // Added Rout
   // --- End Logging Function ---
 
 
-  // Static list of screens
+  // Static list of screens — order matches the bottom nav tabs.
   static const List<Widget> _widgetOptions = <Widget>[
+    ScriptureInboxScreen(),
     HomeScreen(),
     SettingsScreen(),
   ];
@@ -244,25 +248,71 @@ class _MainScreenState extends State<MainScreen> with RouteAware { // Added Rout
         ),
         child: SafeArea( // Added SafeArea
            bottom: true,
-           child: BottomNavigationBar(
-             items: const <BottomNavigationBarItem>[
-               BottomNavigationBarItem( icon: Icon(Icons.home), label: 'Home', ),
-               BottomNavigationBarItem( icon: Icon(Icons.settings), label: 'Settings', ),
-             ],
-             currentIndex: _selectedIndex,
-             onTap: _onItemTapped,
-             // Use theme settings
-             type: Theme.of(context).bottomNavigationBarTheme.type ?? BottomNavigationBarType.fixed,
-             backgroundColor: Colors.transparent, // Keep transparent
-             elevation: 0, // Keep 0
-             selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor,
-             unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
-             selectedLabelStyle: Theme.of(context).bottomNavigationBarTheme.selectedLabelStyle,
-             unselectedLabelStyle: Theme.of(context).bottomNavigationBarTheme.unselectedLabelStyle,
-             // *** indicatorColor is no longer explicitly set here OR in the theme data ***
+           child: ValueListenableBuilder<int>(
+             valueListenable: messageStore.unreadCount,
+             builder: (context, unread, _) => BottomNavigationBar(
+               items: <BottomNavigationBarItem>[
+                 BottomNavigationBarItem(
+                   icon: _ScriptureTabIcon(unread: unread),
+                   label: 'Scripture',
+                 ),
+                 const BottomNavigationBarItem( icon: Icon(Icons.home), label: 'Home', ),
+                 const BottomNavigationBarItem( icon: Icon(Icons.settings), label: 'Settings', ),
+               ],
+               currentIndex: _selectedIndex,
+               onTap: _onItemTapped,
+               // Use theme settings
+               type: Theme.of(context).bottomNavigationBarTheme.type ?? BottomNavigationBarType.fixed,
+               backgroundColor: Colors.transparent, // Keep transparent
+               elevation: 0, // Keep 0
+               selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor,
+               unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
+               selectedLabelStyle: Theme.of(context).bottomNavigationBarTheme.selectedLabelStyle,
+               unselectedLabelStyle: Theme.of(context).bottomNavigationBarTheme.unselectedLabelStyle,
+               // *** indicatorColor is no longer explicitly set here OR in the theme data ***
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+// The Scripture tab's open-book icon, with a gold unread-count badge.
+class _ScriptureTabIcon extends StatelessWidget {
+  final int unread;
+  const _ScriptureTabIcon({required this.unread});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.menu_book),
+        if (unread > 0)
+          Positioned(
+            right: -6,
+            top: -4,
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD8B25A),
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                unread > 9 ? '9+' : '$unread',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFF1A237E),
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  height: 1.0,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

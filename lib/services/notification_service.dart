@@ -9,7 +9,6 @@ import '../firebase_options.dart';
 import '../models/scripture_message.dart';
 import '../models/song.dart';
 import '../screens/scripture_detail_screen.dart';
-import '../screens/scripture_inbox_screen.dart';
 import '../screens/song_detail_screen.dart';
 import '../services/message_store.dart';
 import '../services/song_service.dart';
@@ -184,13 +183,6 @@ class NotificationService {
     } catch (_) {
       return null;
     }
-  }
-
-  // Opens the inbox screen (used by the home-screen bell).
-  void openInbox() {
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(builder: (_) => const ScriptureInboxScreen()),
-    );
   }
 }
 
