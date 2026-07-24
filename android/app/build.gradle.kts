@@ -15,6 +15,8 @@ android {
     ndkVersion = "28.2.13676358"
 
     compileOptions {
+        // Required by flutter_local_notifications.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -67,7 +69,7 @@ dependencies {
 
     // Add other Firebase dependencies if needed
 
-    // Keep other existing dependencies (like implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"))
-    // implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.23") // Example, use your actual Kotlin version if needed explicitly
+    // Required by flutter_local_notifications for older-API compatibility.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 // *** END Dependencies Block ***

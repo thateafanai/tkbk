@@ -68,8 +68,10 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
           if (showBackButton)
             Positioned(
               left: 0,
-              top: 0, // Align to top within padding area
-              bottom: 0,
+              top: 0,
+              // Extra bottom inset raises the icon ~2px so it optically aligns
+              // with the centre of the (all-caps) title, not the text line box.
+              bottom: 4,
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white), // White icon
                 tooltip: 'Back',
@@ -83,8 +85,9 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
           if (actions != null && actions!.isNotEmpty)
             Positioned(
               right: 0,
-              top: 0, // Align to top within padding area
-              bottom: 0,
+              top: 0,
+              // Match the back button's optical nudge (see above).
+              bottom: 4,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: actions!,
