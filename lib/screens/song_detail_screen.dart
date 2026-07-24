@@ -1,13 +1,15 @@
 // lib/screens/song_detail_screen.dart
 import 'package:flutter/material.dart';
 import '../models/song.dart';
+import '../services/song_service.dart';
 import '../state/favorites_state.dart';
 import '../state/settings_state.dart';
 import '../widgets/custom_header.dart';
 
 class SongDetailScreen extends StatefulWidget {
   final Song song;
-  const SongDetailScreen({super.key, required this.song});
+  final double? initialFontSize; // carried across swipe navigation
+  const SongDetailScreen({super.key, required this.song, this.initialFontSize});
   @override
   State<SongDetailScreen> createState() => _SongDetailScreenState();
 }
@@ -16,6 +18,85 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
   double _currentFontSize = 16.0;
   final double _minFontSize = 10.0;
   final double _maxFontSize = 30.0;
+
+  // --- Pinch-to-zoom: track active fingers and scale the font live ---
+  final Map<int, Offset> _pointers = {};
+  double? _pinchStartDistance;
+  double _pinchStartFontSize = 16.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentFontSize = widget.initialFontSize ?? _currentFontSize;
+  }
+
+  bool get _isPinching => _pointers.length >= 2;
+
+  void _onPointerDown(PointerDownEvent e) {
+    _pointers[e.pointer] = e.position;
+    if (_pointers.length == 2) {
+      _pinchStartDistance = _pointerDistance();
+      _pinchStartFontSize = _currentFontSize;
+    }
+    setState(() {}); // refresh scroll physics (disabled while pinching)
+  }
+
+  void _onPointerMove(PointerMoveEvent e) {
+    if (!_pointers.containsKey(e.pointer)) return;
+    _pointers[e.pointer] = e.position;
+    if (_isPinching && _pinchStartDistance != null && _pinchStartDistance! > 0) {
+      final scale = _pointerDistance() / _pinchStartDistance!;
+      final newSize = (_pinchStartFontSize * scale).clamp(_minFontSize, _maxFontSize);
+      if ((newSize - _currentFontSize).abs() > 0.1) {
+        setState(() => _currentFontSize = newSize);
+      }
+    }
+  }
+
+  void _onPointerEnd(PointerEvent e) {
+    _pointers.remove(e.pointer);
+    if (_pointers.length < 2) _pinchStartDistance = null;
+    setState(() {});
+  }
+
+  double _pointerDistance() {
+    final pts = _pointers.values.toList();
+    return (pts[0] - pts[1]).distance;
+  }
+
+  // --- Swipe navigation: left = next song, right = previous ---
+  void _goToAdjacent(int direction) {
+    final songs = songService.songs; // sorted by number
+    final idx = songs.indexWhere((s) => s.number == widget.song.number);
+    if (idx == -1) return;
+    final targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= songs.length) {
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(direction > 0 ? 'This is the last song.' : 'This is the first song.'),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ));
+      return;
+    }
+    final target = songs[targetIdx];
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 260),
+        pageBuilder: (_, __, ___) =>
+            SongDetailScreen(song: target, initialFontSize: _currentFontSize),
+        transitionsBuilder: (_, animation, __, child) {
+          final begin = Offset(direction > 0 ? 1.0 : -1.0, 0.0);
+          return SlideTransition(
+            position: Tween(begin: begin, end: Offset.zero)
+                .animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
 
   // Returns the verse number (e.g. "1") for stanza keys, or a display name
   // (e.g. "Chorus") for non-stanza parts like chorus/refrain/outro.
@@ -98,11 +179,29 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Listener(
+              onPointerDown: _onPointerDown,
+              onPointerMove: _onPointerMove,
+              onPointerUp: _onPointerEnd,
+              onPointerCancel: _onPointerEnd,
+              child: GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  if (_isPinching) return;
+                  final v = details.primaryVelocity ?? 0;
+                  if (v < -100) {
+                    _goToAdjacent(1); // swipe left → next
+                  } else if (v > 100) {
+                    _goToAdjacent(-1); // swipe right → previous
+                  }
+                },
+                child: SingleChildScrollView(
+                  physics: _isPinching
+                      ? const NeverScrollableScrollPhysics()
+                      : const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   // Translation and Key
                   if (widget.song.translation != null && widget.song.translation!.isNotEmpty)
                     Padding(padding: const EdgeInsets.only(bottom: 4.0), child: Text('Translation: ${widget.song.translation}', style: infoStyle)),
@@ -113,7 +212,9 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
                   // Lyrics
                   for (LyricPart part in widget.song.lyrics)
                     _buildLyricPart(part, baseStyle, italicStyle),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
