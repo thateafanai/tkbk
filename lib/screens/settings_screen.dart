@@ -17,7 +17,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final List<String> _fontOptions = ['Default', 'Roboto', 'Lato', 'Open Sans'];
   String _appName = '';
   String _version = '';
-  String _buildNumber = '';
 
   @override
   void initState() {
@@ -33,13 +32,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         setState(() {
           _appName = packageInfo.appName;
           _version = packageInfo.version;
-          _buildNumber = packageInfo.buildNumber;
         });
       }
     } catch (e) {
       print("Error loading package info: $e");
       if (mounted) {
-        setState(() { _version = 'N/A'; _buildNumber = ''; });
+        setState(() { _version = 'N/A'; });
       }
     }
   }
@@ -198,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                    ListTile(
                      dense: true,
                      title: Text('Version', style: textTheme.titleSmall),
-                     trailing: Text(_version.isEmpty ? 'Loading...' : '$_version+$_buildNumber'), // Show loading or version
+                     trailing: Text(_version.isEmpty ? 'Loading...' : _version), // Show loading or version
                    ),
                    const Divider(height: 1, indent: 16, endIndent: 16), // Divider inside the card
                    ListTile(
