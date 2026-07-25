@@ -44,7 +44,15 @@ class SongListItem extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       child: Container(
         decoration: neumorphicDecoration,
-        child: ListTile(
+        // The Card above is deliberately transparent (the Container just
+        // above draws the real neumorphic background), which makes
+        // ListTile's debug-mode framework print a false-positive warning
+        // that its ink splash may be invisible. Wrapping in an explicit
+        // transparency-type Material tells it this is intentional; the
+        // splash still paints normally on top of the Container's background.
+        child: Material(
+          type: MaterialType.transparency,
+          child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             title: Text(
               song.title, // Access song via class field
@@ -71,6 +79,7 @@ class SongListItem extends StatelessWidget {
               );
             },
           ),
+        ),
       ),
     );
      // --- End logic inside build method ---
