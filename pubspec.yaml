@@ -87,9 +87,10 @@ flutter_native_splash:
   # safe-zone circle (and some OEM launchers) crop a full-bleed image.
   image: assets/icon/app_icon_splash.png
 
-  # Branding text image (at bottom)
-  branding: assets/branding_text.png # <-- ADDED branding property
-  branding_mode: bottom # Position branding at the bottom
+  # No separate branding text: Android 12+'s native SplashScreen API only
+  # supports a single centered icon, so a bottom-branding layer never shows
+  # on phones anyway (only web, where it created an ugly gap). One clean
+  # icon everywhere instead.
 
   # Platform toggles
   android: true
