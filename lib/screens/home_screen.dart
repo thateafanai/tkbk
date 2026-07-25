@@ -1,8 +1,10 @@
 // lib/screens/home_screen.dart
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:tkbk/models/song.dart';
 import 'package:tkbk/models/search_result.dart';
+import 'package:tkbk/services/ios_web_install.dart';
 import 'package:tkbk/services/song_service.dart';
 import 'package:tkbk/utils/route_observer.dart' as utils;
 
@@ -27,12 +29,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounceTimer;
   final FocusNode _searchFocusNode = FocusNode();
+  bool _showIosInstallCard = false;
 
   @override
   void initState() {
     super.initState();
     _songs = songService.songs;
     _searchFocusNode.addListener(_onFocusChange);
+    _showIosInstallCard = kIsWeb && shouldOfferIosInstall();
+  }
+
+  void _dismissIosInstallCard() {
+    dismissIosInstallForSession();
+    setState(() => _showIosInstallCard = false);
   }
 
   @override
@@ -142,6 +151,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
+                      if (_showIosInstallCard) ...[
+                        _buildIosInstallCard(),
+                        const SizedBox(height: 14),
+                      ],
                       _buildFeatureGrid(context, cardColor, gold, muted, textColor, isDark),
                       const SizedBox(height: 12),
                       _buildFeedbackRow(context, muted, gold, lineColor),
@@ -208,6 +221,57 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           Text(
             '$songCount hymns, always with you',
             style: TextStyle(color: Colors.white.withValues(alpha: 0.72), fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Web-only, iOS Safari-only: guides users to install the site as a
+  // home-screen app, since that's their only path to a native-feeling
+  // experience without an App Store listing. Persists dismissal only for
+  // the current browser session, so it resurfaces on a future visit if
+  // they still haven't installed.
+  Widget _buildIosInstallCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gold = isDark ? _goldDark : _goldLight;
+    final gradientColors = isDark ? [_indigoDark, _indigoDark2] : [_indigoLight, _indigoLight2];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14.0, 12.0, 8.0, 12.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: gradientColors),
+        borderRadius: BorderRadius.circular(14.0),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 1.0),
+            child: Icon(Icons.ios_share, color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(fontSize: 12.5, height: 1.45, color: Colors.white),
+                children: [
+                  const TextSpan(text: 'Install this app on your iPhone: tap '),
+                  TextSpan(text: 'Share', style: TextStyle(fontWeight: FontWeight.bold, color: gold)),
+                  const TextSpan(text: ', then '),
+                  TextSpan(text: 'Add to Home Screen', style: TextStyle(fontWeight: FontWeight.bold, color: gold)),
+                  const TextSpan(text: '.'),
+                ],
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: _dismissIosInstallCard,
+            borderRadius: BorderRadius.circular(20.0),
+            child: const Padding(
+              padding: EdgeInsets.all(6.0),
+              child: Icon(Icons.close, color: Colors.white70, size: 16),
+            ),
           ),
         ],
       ),
