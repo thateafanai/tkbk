@@ -136,55 +136,8 @@
   
   <script src="flutter_bootstrap.js" async=""></script>
 
-  <!-- iOS "Add to Home Screen" hint. Shows only in iPhone/iPad Safari when the
-       app isn't already installed; dismissible and remembered. -->
-  <style>
-    #a2hs {
-      position: fixed; left: 12px; right: 12px; bottom: 14px; z-index: 2147483647;
-      background: #1A237E; color: #fff; border-radius: 16px; padding: 14px 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
-      font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
-      display: none; align-items: center; gap: 12px;
-    }
-    #a2hs.show { display: flex; }
-    #a2hs .txt { flex: 1; font-size: 14px; line-height: 1.45; }
-    #a2hs .txt b { font-weight: 700; }
-    #a2hs .share { display: inline-block; vertical-align: -3px; }
-    #a2hs .gold { color: #E4C063; font-weight: 700; }
-    #a2hs button {
-      background: rgba(255,255,255,.15); border: none; color: #fff;
-      border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 700;
-      cursor: pointer; font-family: inherit;
-    }
-  </style>
-  <div id="a2hs" role="dialog" aria-label="Install this app">
-    <div class="txt">
-      Install <b>Biisi Kheta</b> on your iPhone: tap the Share icon
-      <svg class="share" width="16" height="16" fill="none" stroke="#E4C063" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 15V3"></path><path d="M8 7l4-4 4 4"></path><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"></path></svg>
-      then <span class="gold">Add to Home Screen</span>.
-    </div>
-    <button id="a2hsClose">Got it</button>
-  </div>
-  <script>
-    (function () {
-      var ua = window.navigator.userAgent;
-      var isIOS = /iPhone|iPad|iPod/.test(ua);
-      // iPadOS 13+ reports as Mac but has touch; catch that too.
-      var isIPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-      var isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
-      var standalone = ('standalone' in window.navigator) && window.navigator.standalone;
-      var dismissed = localStorage.getItem('a2hs_dismissed') === '1';
-
-      if ((isIOS || isIPadOS) && isSafari && !standalone && !dismissed) {
-        var el = document.getElementById('a2hs');
-        // Wait a moment so it appears after the app paints, not over the splash.
-        setTimeout(function () { el.classList.add('show'); }, 2500);
-        document.getElementById('a2hsClose').addEventListener('click', function () {
-          el.classList.remove('show');
-          localStorage.setItem('a2hs_dismissed', '1');
-        });
-      }
-    })();
-  </script>
+  <!-- The iOS "Add to Home Screen" install prompt now lives inside the
+       Flutter app itself (lib/screens/home_screen.dart), matching the
+       app's design instead of a separate raw HTML overlay. -->
 
 </body></html>
