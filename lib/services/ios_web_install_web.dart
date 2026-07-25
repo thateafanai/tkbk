@@ -7,23 +7,38 @@
 import 'dart:html' as html;
 
 bool shouldOfferIosInstall() {
-  final dynamic nav = html.window.navigator;
-  final String ua = (nav.userAgent as String?) ?? '';
-  final String platform = (nav.platform as String?) ?? '';
-  final int maxTouchPoints = (nav.maxTouchPoints as num?)?.toInt() ?? 0;
-  // iOS Safari exposes this non-standard property once the page is running
-  // as an installed home-screen app.
-  final bool standalone = (nav.standalone as bool?) ?? false;
+  // `nav.standalone` and `nav.maxTouchPoints` are non-standard/iOS-Safari-only
+  // properties. Reading a truly nonexistent dynamic property on a browser's
+  // native navigator object threw on Samsung Internet (an Android browser,
+  // where these never exist) and crashed the whole page in release mode —
+  // Flutter's red error screen is debug-only, so a build()-time exception
+  // just renders blank instead. Never let this function throw.
+  try {
+    final dynamic nav = html.window.navigator;
+    final String ua = (nav.userAgent as String?) ?? '';
+    final String platform = (nav.platform as String?) ?? '';
+    final int maxTouchPoints = (nav.maxTouchPoints as num?)?.toInt() ?? 0;
+    // iOS Safari exposes this non-standard property once the page is running
+    // as an installed home-screen app.
+    final bool standalone = (nav.standalone as bool?) ?? false;
 
-  final isIOS = RegExp(r'iPhone|iPad|iPod').hasMatch(ua);
-  // iPadOS 13+ reports as "Mac" in the user agent but has touch support.
-  final isIPadOS = platform == 'MacIntel' && maxTouchPoints > 1;
-  final isSafari = ua.contains('Safari') && !RegExp(r'CriOS|FxiOS|EdgiOS').hasMatch(ua);
-  final dismissed = html.window.sessionStorage['ios_install_dismissed'] == '1';
+    final isIOS = RegExp(r'iPhone|iPad|iPod').hasMatch(ua);
+    // iPadOS 13+ reports as "Mac" in the user agent but has touch support.
+    final isIPadOS = platform == 'MacIntel' && maxTouchPoints > 1;
+    final isSafari = ua.contains('Safari') && !RegExp(r'CriOS|FxiOS|EdgiOS').hasMatch(ua);
+    final dismissed = html.window.sessionStorage['ios_install_dismissed'] == '1';
 
-  return (isIOS || isIPadOS) && isSafari && !standalone && !dismissed;
+    return (isIOS || isIPadOS) && isSafari && !standalone && !dismissed;
+  } catch (_) {
+    return false;
+  }
 }
 
 void dismissIosInstallForSession() {
-  html.window.sessionStorage['ios_install_dismissed'] = '1';
+  try {
+    html.window.sessionStorage['ios_install_dismissed'] = '1';
+  } catch (_) {
+    // Ignore — e.g. sessionStorage can be restricted in some private/embedded
+    // browsing contexts. Worst case the card reappears next visit.
+  }
 }
