@@ -359,8 +359,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
       child: Column(
         children: [
-          Text('VERSE FOR TODAY', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.8, color: gold)),
-          const SizedBox(height: 12),
           _buildOrnament(gold),
           const SizedBox(height: 14),
           Text(
