@@ -53,3 +53,6 @@ app.*.map.json
 
 # Kotlin compiler session/error scratch dir
 android/.kotlin/
+
+# Local Dart/Flutter DevTools settings
+devtools_options.yaml

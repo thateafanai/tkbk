@@ -84,9 +84,10 @@ flutter_native_splash:
   # Optional dark mode color
   # color_dark: "#1A237E"
 
-  # Main logo image (centered). Padded version — Android 12+'s splash
-  # safe-zone circle (and some OEM launchers) crop a full-bleed image.
-  image: assets/icon/app_icon_splash.png
+  # Main logo image (centered). The current design already has generous
+  # built-in padding (rounded-square silhouette with transparent corners),
+  # so it's safe to use directly without a separate padded derivative.
+  image: assets/icon/app_icon.png
 
   # No separate branding text: Android 12+'s native SplashScreen API only
   # supports a single centered icon, so a bottom-branding layer never shows
@@ -100,4 +101,4 @@ flutter_native_splash:
   # Android 12 config (uses main image/color if not specified)
   android_12:
     color: "#FFFFFF"
-    image: assets/icon/app_icon_splash.png
+    image: assets/icon/app_icon.png
