@@ -1,5 +1,10 @@
 // lib/screens/scripture_detail_screen.dart
+import 'dart:io';
+
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/scripture_message.dart';
@@ -20,6 +25,8 @@ class _ScriptureDetailScreenState extends State<ScriptureDetailScreen> {
   static const Color _gold = Color(0xFF9C7724);
   static const Color _goldDark = Color(0xFFD8B25A);
 
+  bool _isSharing = false;
+
   @override
   void initState() {
     super.initState();
@@ -31,13 +38,51 @@ class _ScriptureDetailScreenState extends State<ScriptureDetailScreen> {
   Color _goldFor(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? _goldDark : _gold;
 
-  void _share() {
-    final m = widget.message;
+  String _shareText(ScriptureMessage m) {
     final buffer = StringBuffer();
     if (m.reference != null && m.reference!.isNotEmpty) buffer.writeln(m.reference);
     buffer.writeln(m.body);
     buffer.write('\n— ${m.title}, Apatani Biisi Kheta');
-    Share.share(buffer.toString().trim());
+    return buffer.toString().trim();
+  }
+
+  Future<void> _share() async {
+    if (_isSharing) return;
+    final m = widget.message;
+    final text = _shareText(m);
+    final imageUrl = m.imageUrl;
+
+    // No image, or running on web (no filesystem to stage a temp file):
+    // share text only.
+    if (imageUrl == null || imageUrl.isEmpty || kIsWeb) {
+      Share.share(text);
+      return;
+    }
+
+    setState(() => _isSharing = true);
+    try {
+      final response = await http.get(Uri.parse(imageUrl)).timeout(const Duration(seconds: 15));
+      if (response.statusCode != 200) throw Exception('HTTP ${response.statusCode}');
+
+      final contentType = response.headers['content-type'] ?? '';
+      final ext = contentType.contains('png')
+          ? 'png'
+          : contentType.contains('webp')
+              ? 'webp'
+              : 'jpg';
+
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/scripture_${DateTime.now().millisecondsSinceEpoch}.$ext');
+      await file.writeAsBytes(response.bodyBytes);
+
+      await Share.shareXFiles([XFile(file.path)], text: text);
+    } catch (e) {
+      if (kDebugMode) print('Could not attach image to share: $e');
+      // Fall back to text-only rather than leaving the user stuck.
+      await Share.share(text);
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
   }
 
   String _formattedDate(DateTime d) {
@@ -73,9 +118,14 @@ class _ScriptureDetailScreenState extends State<ScriptureDetailScreen> {
         showBackButton: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_outlined, color: Colors.white),
+            icon: _isSharing
+                ? const SizedBox(
+                    width: 20, height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                  )
+                : const Icon(Icons.share_outlined, color: Colors.white),
             tooltip: 'Share',
-            onPressed: _share,
+            onPressed: _isSharing ? null : _share,
           ),
         ],
       ),
@@ -134,9 +184,14 @@ class _ScriptureDetailScreenState extends State<ScriptureDetailScreen> {
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: _share,
-                    icon: const Icon(Icons.share, size: 18),
-                    label: const Text('Share'),
+                    onPressed: _isSharing ? null : _share,
+                    icon: _isSharing
+                        ? const SizedBox(
+                            width: 16, height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                          )
+                        : const Icon(Icons.share, size: 18),
+                    label: Text(_isSharing ? 'Preparing…' : 'Share'),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.indigo[900],
                       padding: const EdgeInsets.symmetric(vertical: 14),
