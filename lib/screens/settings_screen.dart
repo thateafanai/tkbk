@@ -5,6 +5,7 @@ import '../state/settings_state.dart';          // Ensure this path is correct a
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'feedback_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -209,6 +210,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                      dense: true,
                      title: Text('Published by', style: textTheme.titleSmall),
                      subtitle: const Text('Apatani Baptist Association, Ziro \nLower Subansiri District, Arunachal Pradesh.'),
+                   ),
+                   const Divider(height: 1, indent: 16, endIndent: 16),
+                   // Feedback Link
+                   ListTile(
+                     dense: true,
+                     title: Text('Feedback', style: textTheme.titleSmall),
+                     trailing: const Icon(Icons.feedback_outlined, size: 18, color: Colors.blue),
+                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FeedbackScreen())),
+                   ),
+                   const Divider(height: 1, indent: 16, endIndent: 16),
+                   // Web App Link
+                   ListTile(
+                     dense: true,
+                     title: Text('Also available on the web', style: textTheme.titleSmall),
+                     subtitle: const Text('tkbk.babfo.org'),
+                     trailing: const Icon(Icons.launch_outlined, size: 18, color: Colors.blue),
+                     onTap: () => _launchUrl(Uri.parse('https://tkbk.babfo.org')),
                    ),
                    const Divider(height: 1, indent: 16, endIndent: 16),
                    // Privacy Policy Link
