@@ -50,3 +50,6 @@ app.*.map.json
 
 # Firebase deploy cache
 .firebase/
+
+# Kotlin compiler session/error scratch dir
+android/.kotlin/
