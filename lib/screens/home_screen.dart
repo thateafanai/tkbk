@@ -199,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: const Text(
-              'Apatani Kristan Biisie Kheta',
+              'Apatani Kristan Biisi Kheta',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17, letterSpacing: 0.2),
             ),
