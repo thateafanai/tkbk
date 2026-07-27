@@ -58,16 +58,23 @@ const upload = multer({
 });
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Uploads an image to Firebase Storage and returns a long-lived signed URL.
-// Signed URLs work regardless of the bucket's public-access settings.
+// Uploads an image to Firebase Storage and returns a public download URL
+// (the same firebasestorage.googleapis.com form the browser admin page's
+// getDownloadURL() produces). Storage rules already allow public reads under
+// scripture_images/**, so no signed URL / token is needed.
+//
+// Note: a GCS *signed* URL (storage.googleapis.com, via bucket.getSignedUrl)
+// was used previously. It works fine on mobile (no CORS enforcement there),
+// but Flutter Web's image decoding fetches the URL with CORS and that host
+// sends no CORS headers unless the bucket has CORS explicitly configured —
+// so the image silently failed to load on web while the text still showed.
 async function uploadImage(file) {
   const bucket = admin.storage().bucket();
   const ext = (file.originalname.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
   const dest = `scripture_images/${Date.now()}.${ext || 'jpg'}`;
   const target = bucket.file(dest);
   await target.save(file.buffer, { contentType: file.mimetype, resumable: false });
-  const [url] = await target.getSignedUrl({ action: 'read', expires: '03-09-2491' });
-  return url;
+  return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(dest)}?alt=media`;
 }
 
 app.post('/send', upload.single('image'), async (req, res) => {

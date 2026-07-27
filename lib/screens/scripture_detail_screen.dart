@@ -52,9 +52,8 @@ class _ScriptureDetailScreenState extends State<ScriptureDetailScreen> {
     final text = _shareText(m);
     final imageUrl = m.imageUrl;
 
-    // No image, or running on web (no filesystem to stage a temp file):
-    // share text only.
-    if (imageUrl == null || imageUrl.isEmpty || kIsWeb) {
+    // No image: nothing to attach, share text only.
+    if (imageUrl == null || imageUrl.isEmpty) {
       Share.share(text);
       return;
     }
@@ -70,15 +69,26 @@ class _ScriptureDetailScreenState extends State<ScriptureDetailScreen> {
           : contentType.contains('webp')
               ? 'webp'
               : 'jpg';
+      final fileName = 'scripture_${DateTime.now().millisecondsSinceEpoch}.$ext';
 
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/scripture_${DateTime.now().millisecondsSinceEpoch}.$ext');
-      await file.writeAsBytes(response.bodyBytes);
+      final XFile xfile;
+      if (kIsWeb) {
+        // No filesystem on web: hand the downloaded bytes straight to
+        // share_plus, which shares them via the browser's Web Share API
+        // (falls back to text-only below if the browser can't share files).
+        xfile = XFile.fromData(response.bodyBytes, mimeType: 'image/$ext', name: fileName);
+      } else {
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsBytes(response.bodyBytes);
+        xfile = XFile(file.path);
+      }
 
-      await Share.shareXFiles([XFile(file.path)], text: text);
+      await Share.shareXFiles([xfile], text: text);
     } catch (e) {
       if (kDebugMode) print('Could not attach image to share: $e');
-      // Fall back to text-only rather than leaving the user stuck.
+      // Fall back to text-only rather than leaving the user stuck (e.g. the
+      // browser doesn't support the Web Share API's file sharing).
       await Share.share(text);
     } finally {
       if (mounted) setState(() => _isSharing = false);
