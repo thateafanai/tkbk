@@ -58,7 +58,7 @@
   .item.sched { border-color: #ffd9a0; background: #fffdf7; }
   .item.sent  { border-color: #a5d6a7; background: #f4fbf4; }
   .item .ref { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
-  .item .txt { font-family: var(--serif); font-size: 14px; margin-top: 4px; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .item .txt { font-family: var(--serif); font-size: 14px; margin-top: 4px; color: var(--ink); display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .item .meta { font-size: 11px; color: var(--muted); margin-top: 6px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .chip { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
   .chip-grey { background: #eceff5; color: #5a6072; }
@@ -110,9 +110,9 @@
       <div class="card">
         <h2 id="formHeading">New scripture</h2>
         <div class="note">
-          <b>Leave the date empty</b> → saved to the archive, visible in the app now, no notification.<br>
-          <b>Pick a date</b> → it's sent automatically as a push that morning (6 AM). Prepare a whole week or month ahead.<br>
-          Or use <b>Send now</b> on any item below to push it immediately.
+          <b>Leave the date empty</b> → saves a draft only (not shown in the app yet).<br>
+          <b>Pick a date</b> → it will be sent automatically as a push at 5 AM (IST) on that day.<br>
+          <b>Send now</b> overrides the schedule and publishes immediately.
         </div>
 
         <label>Title</label>
@@ -320,11 +320,14 @@ async function loadList() {
       const v = d.data();
       const scheduled = v.scheduledFor?.toDate ? v.scheduledFor.toDate() : null;
       const future = scheduled && scheduled.getTime() > now;
+      const sentAt = v.sentAt?.toDate ? v.sentAt.toDate() : null;
 
       let chip;
       if (v.sent) chip = '<span class="chip chip-green">✓ Sent</span>';
       else if (future) chip = `<span class="chip chip-orange">⏰ ${scheduled.toLocaleDateString()}</span>`;
-      else chip = '<span class="chip chip-grey">In archive</span>';
+      else chip = '<span class="chip chip-grey">Saved (not sent)</span>';
+
+      const sentLabel = sentAt ? `<div class="meta" style="margin-top:4px">Sent ${formatDateTime(sentAt)}</div>` : '';
 
       const el = document.createElement('div');
       el.className = 'item' + (v.sent ? ' sent' : (future ? ' sched' : ''));
@@ -334,6 +337,7 @@ async function loadList() {
           ${v.reference ? `<div class="ref">${esc(v.reference)}</div>` : ''}
           <div class="txt">${esc(v.verse || '')}</div>
           <div class="meta">${chip}</div>
+          ${sentLabel}
         </div>
         <div class="item-actions">
           ${v.sent ? '' : `<button class="btn btn-gold btn-sm" data-send="${d.id}">Send now</button>`}
@@ -352,7 +356,7 @@ async function loadList() {
 }
 
 async function sendNow(id) {
-  if (!confirm('Send this scripture as a push notification to everyone right now?')) return;
+  if (!confirm('Send this scripture to everyone now? This will override any future schedule and publish immediately.')) return;
   setStatus('Sending push…', '');
   try {
     await sendNowFn({ scriptureId: id });
@@ -386,6 +390,15 @@ async function remove(id) {
 function toDateInput(d) {
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function formatDateTime(d) {
+  return d.toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 function setStatus(msg, type) { const s = $('status'); s.textContent = msg; s.className = 'status ' + type; }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
