@@ -3,15 +3,71 @@ import 'package:flutter/material.dart';
 
 import '../models/scripture_message.dart';
 import '../services/message_store.dart';
+import '../services/notification_service.dart';
 import '../widgets/custom_header.dart';
 import 'scripture_detail_screen.dart';
 
 // The archive: every received message as a card, newest first.
-class ScriptureInboxScreen extends StatelessWidget {
+class ScriptureInboxScreen extends StatefulWidget {
   const ScriptureInboxScreen({super.key});
 
   static const Color _gold = Color(0xFF9C7724);
   static const Color _goldDark = Color(0xFFD8B25A);
+
+  @override
+  State<ScriptureInboxScreen> createState() => _ScriptureInboxScreenState();
+}
+
+class _ScriptureInboxScreenState extends State<ScriptureInboxScreen> with WidgetsBindingObserver {
+  bool _updatingNotificationPref = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Catches the user granting/revoking the permission from system Settings
+    // (via the snackbar's "Settings" action, or manually) and coming back.
+    if (state == AppLifecycleState.resumed) {
+      notificationService.refreshPermissionStatus();
+    }
+  }
+
+  Future<void> _onToggleNotifications(bool enabled) async {
+    setState(() => _updatingNotificationPref = true);
+    try {
+      final isEnabled = await notificationService.setNotificationsEnabled(enabled);
+      if (enabled && !isEnabled && mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Notification permission is blocked by your device settings. Enable it in Settings, then turn this switch on again.',
+            ),
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'Settings',
+              onPressed: () {
+                notificationService.openSystemSettings();
+              },
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _updatingNotificationPref = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,39 +83,98 @@ class ScriptureInboxScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ValueListenableBuilder<List<ScriptureMessage>>(
-        valueListenable: messageStore.messages,
-        builder: (context, messages, _) {
-          if (messages.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.menu_book_outlined, size: 56, color: Theme.of(context).colorScheme.outline),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No messages yet',
-                      style: Theme.of(context).textTheme.titleMedium,
+      body: Column(
+        children: [
+          ValueListenableBuilder<bool>(
+            valueListenable: notificationService.notificationsEnabled,
+            builder: (context, enabled, _) {
+              if (enabled) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                child: Material(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Icon(Icons.notifications_active_outlined,
+                              color: Theme.of(context).colorScheme.primary),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Please allow notifications to receive the Scripture of the Day and important notifications.',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Notifications are disabled.',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.outline,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IgnorePointer(
+                          ignoring: _updatingNotificationPref,
+                          child: Switch(
+                            value: enabled,
+                            onChanged: _onToggleNotifications,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Scripture of the Day and announcements will appear here.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Theme.of(context).colorScheme.outline),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            );
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            itemCount: messages.length,
-            itemBuilder: (context, index) => _MessageCard(message: messages[index]),
-          );
-        },
+              );
+            },
+          ),
+          Expanded(
+            child: ValueListenableBuilder<List<ScriptureMessage>>(
+              valueListenable: messageStore.messages,
+              builder: (context, messages, _) {
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.menu_book_outlined, size: 56, color: Theme.of(context).colorScheme.outline),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No messages yet',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Scripture of the Day and announcements will appear here.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Theme.of(context).colorScheme.outline),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) => _MessageCard(message: messages[index]),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -23,7 +23,12 @@ const TOPIC = 'all_users_tkbk';
 const ADMIN_EMAIL = 'fpthatea@gmail.com';
 
 // Builds and sends the FCM push for one scripture, then marks it sent.
-async function pushScripture(id, data) {
+//
+// options.forceNow:
+//   true  -> visibleFrom is set to now and scheduledFor is cleared.
+//   false -> preserves existing scheduling metadata.
+async function pushScripture(id, data, options = {}) {
+  const forceNow = options.forceNow === true;
   const title = (data.title || 'Scripture of the Day').trim();
   const reference = (data.reference || '').trim();
   const verse = (data.verse || '').trim();
@@ -47,12 +52,17 @@ async function pushScripture(id, data) {
     },
   });
 
-  await db.collection('scriptures').doc(id).update({
+  const update = {
     sent: true,
     sentAt: FieldValue.serverTimestamp(),
-    // Ensure it's visible in the app archive now (keeps an existing value).
-    visibleFrom: data.visibleFrom || FieldValue.serverTimestamp(),
-  });
+    // Send now should always publish immediately. Scheduled runs keep any
+    // existing visibleFrom metadata for historical consistency.
+    visibleFrom: forceNow ? FieldValue.serverTimestamp() : (data.visibleFrom || FieldValue.serverTimestamp()),
+  };
+  if (forceNow) {
+    update.scheduledFor = FieldValue.delete();
+  }
+  await db.collection('scriptures').doc(id).update(update);
 }
 
 // Daily auto-sender. Change the cron/timeZone below to adjust when it fires.
@@ -66,7 +76,7 @@ exports.sendScheduledScriptures = onSchedule(
     for (const doc of snap.docs) {
       if (doc.data().sent === true) continue;
       try {
-        await pushScripture(doc.id, doc.data());
+        await pushScripture(doc.id, doc.data(), { forceNow: false });
         sent++;
         logger.info(`Sent scheduled scripture ${doc.id}`);
       } catch (e) {
@@ -90,6 +100,7 @@ exports.sendScriptureNow = onCall({ region: REGION }, async (request) => {
   if (!doc.exists) {
     throw new HttpsError('not-found', 'Scripture not found.');
   }
-  await pushScripture(scriptureId, doc.data());
+  // Manual send explicitly overrides any future schedule and publishes now.
+  await pushScripture(scriptureId, doc.data(), { forceNow: true });
   return { ok: true };
 });

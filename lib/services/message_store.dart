@@ -51,15 +51,26 @@ class MessageStore {
   void _onSnapshot(QuerySnapshot<Map<String, dynamic>> snap) {
     final nowMillis = DateTime.now().millisecondsSinceEpoch;
     _raw = snap.docs
+        .where((d) => d.data()['sent'] == true)
         .map((d) {
           final data = d.data();
-          final vf = data['visibleFrom'] ?? data['createdAt'];
-          final millis = vf is Timestamp ? vf.millisecondsSinceEpoch : 0;
+          // Use sentAt for the visible timestamp so scheduled scriptures show
+          // the actual push/send time (e.g. 05:00), not 00:00 from a
+          // date-only scheduledFor/visibleFrom value.
+          final ts = _firstTimestamp(data['sentAt'], data['visibleFrom'], data['createdAt']);
+          final millis = ts?.millisecondsSinceEpoch ?? 0;
           return ScriptureMessage.fromFirestore(id: d.id, data: data, createdAtMillis: millis);
         })
         .where((m) => m.receivedAt <= nowMillis)
         .toList();
     _publish();
+  }
+
+  Timestamp? _firstTimestamp(Object? a, Object? b, Object? c) {
+    if (a is Timestamp) return a;
+    if (b is Timestamp) return b;
+    if (c is Timestamp) return c;
+    return null;
   }
 
   void _publish() {

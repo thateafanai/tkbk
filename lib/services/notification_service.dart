@@ -4,6 +4,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../firebase_options.dart';
 import '../models/scripture_message.dart';
@@ -64,35 +66,29 @@ class NotificationService {
   NotificationService._privateConstructor();
   static final NotificationService instance = NotificationService._privateConstructor();
 
+  static const _notificationsEnabledKey = 'scripture_notifications_enabled';
+
   // Shared with MaterialApp so taps can navigate from outside the widget tree.
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  final ValueNotifier<bool> notificationsEnabled = ValueNotifier(false);
+
+  // The user's own toggle intent, independent of whether the OS permission is
+  // actually granted. `notificationsEnabled` (shown in the UI) is the two
+  // combined — both must be true for notifications to actually work.
+  bool _userWantsNotifications = true;
 
   Future<void> initialize() async {
     final messaging = FirebaseMessaging.instance;
 
-    final settings = await messaging.requestPermission(alert: true, badge: true, sound: true);
-    if (kDebugMode) print('FCM permission: ${settings.authorizationStatus}');
-
     await _initLocalNotifications();
+    await _loadNotificationsPreference();
+    await _applyNotificationPreference();
 
     // iOS: allow the system banner while foregrounded too (Android handled by
     // us re-posting via flutter_local_notifications below).
     await messaging.setForegroundNotificationPresentationOptions(
         alert: true, badge: true, sound: true);
-
-    try {
-      await messaging.subscribeToTopic(broadcastTopic);
-    } catch (e) {
-      if (kDebugMode) print('subscribeToTopic failed: $e');
-    }
-
-    try {
-      final token = await messaging.getToken(vapidKey: kIsWeb ? webVapidKey : null);
-      if (kDebugMode) print('FCM token: $token');
-    } catch (e) {
-      if (kDebugMode) print('getToken failed: $e');
-    }
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageTap);
@@ -101,6 +97,99 @@ class NotificationService {
     if (initial != null) {
       // Delay so the navigator is mounted before we push.
       WidgetsBinding.instance.addPostFrameCallback((_) => _onMessageTap(initial));
+    }
+  }
+
+  // Ask OS-level notification permission and return whether notifications are
+  // allowed for this app.
+  Future<bool> requestPermission() async {
+    final settings = await FirebaseMessaging.instance
+        .requestPermission(alert: true, badge: true, sound: true);
+    if (kDebugMode) print('FCM permission: ${settings.authorizationStatus}');
+    return _isAuthorized(settings);
+  }
+
+  bool _isAuthorized(NotificationSettings settings) =>
+      settings.authorizationStatus == AuthorizationStatus.authorized ||
+      settings.authorizationStatus == AuthorizationStatus.provisional;
+
+  // Re-checks the OS permission (without prompting) and updates the visible
+  // toggle/banner accordingly. Call this whenever the app resumes, in case
+  // the user granted/revoked the permission from system Settings while away.
+  Future<void> refreshPermissionStatus() async {
+    await _recomputeEnabled();
+  }
+
+  // User-facing app toggle for Scripture notifications.
+  // Returns true when the resulting state is enabled.
+  Future<bool> setNotificationsEnabled(bool enabled) async {
+    _userWantsNotifications = enabled;
+    if (enabled) {
+      await requestPermission();
+    }
+
+    await _recomputeEnabled();
+    await _persistNotificationsPreference();
+    await _applyNotificationPreference();
+    return notificationsEnabled.value;
+  }
+
+  // Best-effort jump to OS settings where users can re-enable notification
+  // permission after a deny decision.
+  Future<bool> openSystemSettings() async {
+    final uri = Uri.parse('app-settings:');
+    if (!await canLaunchUrl(uri)) return false;
+    return launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _loadNotificationsPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _userWantsNotifications = prefs.getBool(_notificationsEnabledKey) ?? true;
+    } catch (e) {
+      if (kDebugMode) print('notifications preference load failed: $e');
+      _userWantsNotifications = true;
+    }
+    await _recomputeEnabled();
+  }
+
+  // The toggle only shows "enabled" when the user wants it AND the OS
+  // permission is actually granted — a fresh install (permission not yet
+  // granted) must show as disabled, not silently assume it's on.
+  Future<void> _recomputeEnabled() async {
+    final settings = await FirebaseMessaging.instance.getNotificationSettings();
+    notificationsEnabled.value = _userWantsNotifications && _isAuthorized(settings);
+  }
+
+  Future<void> _persistNotificationsPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_notificationsEnabledKey, _userWantsNotifications);
+    } catch (e) {
+      if (kDebugMode) print('notifications preference save failed: $e');
+    }
+  }
+
+  Future<void> _applyNotificationPreference() async {
+    final messaging = FirebaseMessaging.instance;
+
+    try {
+      if (notificationsEnabled.value) {
+        await messaging.subscribeToTopic(broadcastTopic);
+      } else {
+        await messaging.unsubscribeFromTopic(broadcastTopic);
+      }
+    } catch (e) {
+      if (kDebugMode) print('topic sync failed: $e');
+    }
+
+    if (notificationsEnabled.value) {
+      try {
+        final token = await messaging.getToken(vapidKey: kIsWeb ? webVapidKey : null);
+        if (kDebugMode) print('FCM token: $token');
+      } catch (e) {
+        if (kDebugMode) print('getToken failed: $e');
+      }
     }
   }
 
