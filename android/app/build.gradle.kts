@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -6,6 +9,15 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+}
+
+// Signing credentials are loaded from android/key.properties, which is
+// gitignored. Never hardcode them here: this file is tracked and this
+// repository is public.
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    FileInputStream(keystorePropertiesFile).use { keystoreProperties.load(it) }
 }
 
 android {
@@ -36,10 +48,12 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("upload-keystore.jks") // Ensure this matches the filename you just created
-            storePassword = "REDACTED-ROTATED-2026-09-21" // Replace with the password you just set
-            keyAlias = "upload"                     // This should be "upload"
-            keyPassword = "REDACTED-ROTATED-2026-09-21" // Replace with the same password (or your key password if different)
+            if (keystorePropertiesFile.exists()) {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
         }
     }
     buildTypes {
