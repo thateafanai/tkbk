@@ -47,7 +47,12 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
 
   @override
   void dispose() {
-    _player.dispose();
+    // Best-effort: on some devices/timings the audioplayers platform channel
+    // can throw MissingPluginException here (seen in Crashlytics), which
+    // would otherwise crash the whole screen teardown.
+    try {
+      _player.dispose();
+    } catch (_) {}
     super.dispose();
   }
 

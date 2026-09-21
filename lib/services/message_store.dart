@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/scripture_message.dart';
@@ -74,6 +75,21 @@ class MessageStore {
   }
 
   void _publish() {
+    // The Firestore listener can fire while a frame is mid-build (e.g. right
+    // as a widget subscribed via ValueListenableBuilder is being laid out),
+    // and assigning these ValueNotifiers notifies listeners synchronously.
+    // That triggers "setState()/markNeedsBuild() called during build" crashes
+    // (seen repeatedly in Crashlytics). Defer to right after the current
+    // frame in that case; otherwise publish immediately as before.
+    if (SchedulerBinding.instance.schedulerPhase != SchedulerPhase.idle &&
+        SchedulerBinding.instance.schedulerPhase != SchedulerPhase.postFrameCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => _doPublish());
+    } else {
+      _doPublish();
+    }
+  }
+
+  void _doPublish() {
     messages.value = _raw
         .map((m) => m.copyWith(read: _readIds.contains(m.id)))
         .toList();

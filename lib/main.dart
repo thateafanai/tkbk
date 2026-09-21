@@ -35,6 +35,13 @@ void main() async {
   try {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     if (Firebase.apps.isNotEmpty) {
+      // Debug builds (e.g. the developer's own `flutter run` sessions) must
+      // not upload to production Crashlytics: debug-only framework
+      // assertions/warnings (like ListTile's "Material ancestor" diagnostic,
+      // or layout overflow errors) get routed through FlutterError.onError
+      // below and would otherwise show up there as bogus "fatal crashes"
+      // for a single developer device, polluting real user crash data.
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(!kDebugMode);
       PlatformDispatcher.instance.onError = (error, stack) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
         return true;
