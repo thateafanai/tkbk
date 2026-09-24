@@ -1,0 +1,137 @@
+# Codemagic CI for TKBK (Apatani Biisi Kheta)
+# https://codemagic.io  —  free tier: 500 build minutes/month on Mac mini M2.
+#
+# There are two workflows:
+#
+#   1. ios-compile-check  — START HERE. Builds the iOS app WITHOUT code signing.
+#                           Needs no Apple Developer account and costs nothing.
+#                           Its only job is to prove the iOS code compiles.
+#
+#   2. ios-testflight     — Use only AFTER the $99 Apple Developer membership is
+#                           active. Builds a signed .ipa and uploads it to
+#                           TestFlight. Needs the two TODOs below filled in.
+#
+# Android is not built here — it is already released and builds fine locally.
+
+workflows:
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 1. Free compile check — no Apple account required
+  # ───────────────────────────────────────────────────────────────────────────
+  ios-compile-check:
+    name: iOS compile check (unsigned)
+    instance_type: mac_mini_m2
+    # Generous ceiling only so a slow first pod install cannot kill the build.
+    # A normal run is far shorter; you are billed for time used, not this cap.
+    max_build_duration: 60
+
+    environment:
+      # Pinned to the version used locally, so CI builds exactly what was
+      # tested on Android. Plain `stable` would pull whatever is newest.
+      flutter: 3.44.6
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Flutter packages
+        script: flutter pub get
+
+      - name: Install CocoaPods
+        script: |
+          flutter precache --ios
+          cd ios && pod install --repo-update
+
+      - name: Show versions
+        # Cheap, and makes a failing log far easier to read.
+        script: |
+          flutter --version
+          pod --version
+          xcodebuild -version
+
+      - name: Build iOS (release, unsigned)
+        # Release rather than debug: debug can hide release-only failures, and
+        # release is what actually ships.
+        script: flutter build ios --release --no-codesign
+
+    artifacts:
+      - build/ios/iphoneos/*.app
+      # Keep these — when a build fails, the Xcode log is what explains why.
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+
+    # publishing:
+    #   email:
+    #     recipients:
+    #       - your@email.address     # uncomment to be told when a build ends
+    #     notify:
+    #       success: true
+    #       failure: true
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2. TestFlight — only after the Apple Developer membership is active
+  # ───────────────────────────────────────────────────────────────────────────
+  ios-testflight:
+    name: iOS release to TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+
+    integrations:
+      # TODO: in Codemagic → Teams → Integrations → Apple Developer Portal,
+      # add an App Store Connect API key and put its name here.
+      app_store_connect: CODEMAGIC_APP_STORE_KEY
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.thatea.tkbk
+      vars:
+        # TODO: the app's Apple ID — the number in its App Store Connect URL.
+        # Only exists after the app record is created there.
+        APP_STORE_APPLE_ID: 0000000000
+      flutter: 3.44.6
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Flutter packages
+        script: flutter pub get
+
+      - name: Install CocoaPods
+        script: |
+          flutter precache --ios
+          cd ios && pod install --repo-update
+
+      - name: Set up signing
+        # Applies the provisioning profiles fetched by the integration above.
+        script: xcode-project use-profiles
+
+      - name: Build signed IPA
+        # App Store Connect rejects a build number it has already seen, so take
+        # the latest one it holds and add 1. On the very first upload there is
+        # nothing to look up, so fall back to the pubspec build number.
+        # Passed to Flutter directly: Flutter writes the build number into the
+        # Xcode project at build time, overriding anything set beforehand.
+        script: |
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo "")
+          if [ -z "$LATEST" ]; then
+            echo "No existing TestFlight build found — using pubspec build number."
+            flutter build ipa --release \
+              --export-options-plist=/Users/builder/export_options.plist
+          else
+            echo "Latest TestFlight build: $LATEST"
+            flutter build ipa --release \
+              --build-number=$(($LATEST + 1)) \
+              --export-options-plist=/Users/builder/export_options.plist
+          fi
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Uploads to TestFlight only. It does NOT submit to App Review, so
+        # nothing reaches the public store by accident.
+        submit_to_testflight: true
+        submit_to_app_store: false
