@@ -195,7 +195,14 @@ class NotificationService {
 
   Future<void> _initLocalNotifications() async {
     const androidInit = AndroidInitializationSettings('ic_notification');
-    const iosInit = DarwinInitializationSettings();
+    // The defaults would pop the iOS permission prompt at launch. iOS shows
+    // that prompt only once ever, so leave it to the inbox toggle
+    // (requestPermission) where the user has context for it.
+    const iosInit = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     await _localNotifications.initialize(
       settings: const InitializationSettings(android: androidInit, iOS: iosInit),
       onDidReceiveNotificationResponse: (response) {

@@ -5,7 +5,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>Tkbk</string>
+		<string>TKBK</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -51,5 +51,16 @@
 		<array>
 			<string>remote-notification</string>
 		</array>
+		<!-- url_launcher's canLaunchUrl() returns false on iOS for any scheme
+		     not listed here (Settings links, feedback via wa.me, the web app). -->
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>https</string>
+			<string>app-settings</string>
+		</array>
+		<!-- The app uses only standard HTTPS, so it is exempt from export
+		     compliance. Without this key App Store Connect asks on every upload. -->
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 	</dict>
 </plist>

@@ -1,4 +1,5 @@
 // lib/screens/settings_screen.dart
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:tkbk/widgets/custom_header.dart'; // Ensure this path is correct
 import '../state/settings_state.dart';          // Ensure this path is correct and settingsState is accessible
@@ -236,14 +237,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                      trailing: const Icon(Icons.launch_outlined, size: 18, color: Colors.blue),
                      onTap: () => _launchUrl(Uri.parse('https://babfo.org/tkbk-privacy-policy')), // Launch URL on tap
                    ),
-                   const Divider(height: 1, indent: 16, endIndent: 16),
-                   // Rate App Link
-                   ListTile(
-                     dense: true,
-                     title: Text('Rate this app', style: textTheme.titleSmall),
-                     trailing: const Icon(Icons.star_outline, size: 20, color: Colors.amber),
-                     onTap: () => _launchUrl(playStoreUrl), // Launch URL on tap
-                   ),
+                   // Rate App Link — Play Store only. Apple rejects apps that
+                   // point iPhone users at another platform's store.
+                   if (defaultTargetPlatform != TargetPlatform.iOS) ...[
+                     const Divider(height: 1, indent: 16, endIndent: 16),
+                     ListTile(
+                       dense: true,
+                       title: Text('Rate this app', style: textTheme.titleSmall),
+                       trailing: const Icon(Icons.star_outline, size: 20, color: Colors.amber),
+                       onTap: () => _launchUrl(playStoreUrl), // Launch URL on tap
+                     ),
+                   ],
                  ],
                ),
              ),
