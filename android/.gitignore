@@ -12,3 +12,7 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Machine-specific; Android Studio also drops copies inside app/
+app/local.properties
+app/.gradle/

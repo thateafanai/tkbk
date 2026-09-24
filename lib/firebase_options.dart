@@ -24,15 +24,6 @@ class DefaultFirebaseOptions {
         return android;
       case TargetPlatform.iOS:
         return ios;
-      case TargetPlatform.macOS:
-        return macos;
-      case TargetPlatform.windows:
-        return windows;
-      case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -65,24 +56,5 @@ class DefaultFirebaseOptions {
     projectId: 'apatani-biisi-kheta',
     storageBucket: 'apatani-biisi-kheta.firebasestorage.app',
     iosBundleId: 'com.thatea.tkbk',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyB9Z3ENEDA3te1vYjn5rsPua_g3mSxAzlY',
-    appId: '1:371710579657:ios:93cea0552a3d5c424f4e18',
-    messagingSenderId: '371710579657',
-    projectId: 'apatani-biisi-kheta',
-    storageBucket: 'apatani-biisi-kheta.firebasestorage.app',
-    iosBundleId: 'com.thatea.tkbk',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBHmRgL1f-c3Wj7ezoS5QPvkv4SZZ1RlyE',
-    appId: '1:371710579657:web:4222e992f2e53e7f4f4e18',
-    messagingSenderId: '371710579657',
-    projectId: 'apatani-biisi-kheta',
-    authDomain: 'apatani-biisi-kheta.firebaseapp.com',
-    storageBucket: 'apatani-biisi-kheta.firebasestorage.app',
-    measurementId: 'G-XGEMZYJ7FH',
   );
 }
